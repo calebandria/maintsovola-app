@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import SubNavTabs from '~/components/SubNavTabs';
 import { useProjectData } from '~/hooks/use-project-data';
-import FeedCard from '~/components/feed/FeedCard';
+import FeedCard from '~/components/feed/FeedCard'
 import FilterContainer from '~/components/FilterContainer';
 import FilterInterface from '~/components/FilterInterface';
 import { PaginatedFeedExample } from './PaginatedFeedExample';
