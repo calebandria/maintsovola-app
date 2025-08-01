@@ -53,6 +53,7 @@ let tabsTechnicien = [
     label: 'Planning',
     icon: (color: string) => <MaterialIcons name="calendar-today" size={20} color={color} />,
     component: (props: any) => <PlanningTechnicien userRole={userRole} userId={id} {...props} />,
+<<<<<<< HEAD
   },
   {
     label: 'Effectués',
@@ -69,6 +70,26 @@ let tabsTechnicien = [
     icon: (color: string) => <FontAwesome name="credit-card" size={20} color={color} />,
     component: (props: any) => <PaiementsTechnicien userRole={userRole} userId={id} {...props} />,
   },
+=======
+  },
+  {
+    label: 'Effectués',
+    icon: (color: string) => <Feather name="check-circle" size={20} color={color} />,
+    component: (props: any) => <EffectuesTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+  {
+    label: 'Ressources',
+    icon: (color: string) => <MaterialIcons name="inventory" size={20} color={color} />,
+    component: (props: any) => <RessourcesTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+  {
+    label: 'Paiements',
+    icon: (color: string) => <FontAwesome name="credit-card" size={20} color={color} />,
+    component: (props: any) => <PaiementsTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+
+];
+>>>>>>> d2b19ec (fix:parcels)
 
 ];
 
