@@ -53,28 +53,29 @@ let tabsTechnicien = [
   {
     label: 'Parcelles',
     icon: (color: string) => <FontAwesome name="map" size={20} color={color} />,
-    component: ParcellesTechnicien, // à remplacer par ton composant réel
-  },
-  {
-    label: 'Effectués',
-    icon: (color: string) => <Feather name="check-circle" size={20} color={color} />,
-    component: EffectuesTechnicien, // à remplacer par ton composant réel
-  },
-  {
-    label: 'Ressources',
-    icon: (color: string) => <MaterialIcons name="inventory" size={20} color={color} />,
-    component: RessourcesTechnicien, // à remplacer par ton composant réel
-  },
-  {
-    label: 'Paiements',
-    icon: (color: string) => <FontAwesome name="credit-card" size={20} color={color} />,
-    component: PaiementsTechnicien,
+    component: (props: any) => <ParcellesTechnicien userRole={userRole} userId={id} {...props} />,
   },
   {
     label: 'Planning',
     icon: (color: string) => <MaterialIcons name="calendar-today" size={20} color={color} />,
-    component: PlanningTechnicien,
+    component: (props: any) => <PlanningTechnicien userRole={userRole} userId={id} {...props} />,
   },
+  {
+    label: 'Effectués',
+    icon: (color: string) => <Feather name="check-circle" size={20} color={color} />,
+    component: (props: any) => <EffectuesTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+  {
+    label: 'Ressources',
+    icon: (color: string) => <MaterialIcons name="inventory" size={20} color={color} />,
+    component: (props: any) => <RessourcesTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+  {
+    label: 'Paiements',
+    icon: (color: string) => <FontAwesome name="credit-card" size={20} color={color} />,
+    component: (props: any) => <PaiementsTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+
 ];
 
 // Onglets spécifiques pour les superviseurs
