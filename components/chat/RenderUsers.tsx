@@ -21,7 +21,7 @@ const RenderUsers: React.FC<RenderUsersProps> = ({ item, onPress }) => {
   const { user } = useAuth();
   const userId: string = user?.id ? user.id : "";
   if(!userId) return (
-    <Text> Vous êtes non connecyté</Text>
+    <Text> Vous êtes non connecté</Text>
   ) 
       const createConversation = async (otherUserId: string, currentUserId: string) => {
           try {

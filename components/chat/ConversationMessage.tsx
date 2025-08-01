@@ -15,7 +15,7 @@ import {
     ActivityIndicator,
     Dimensions,
 } from 'react-native';
-import { getAllUsers, getConversation, setNewConversation, subscribeToConversations } from '~/services/conversation-message-service';
+import { getAllUsers, getConversation, markMessagesAsRead, setNewConversation, subscribeToConversations } from '~/services/conversation-message-service';
 import { 
     Conversation,
     Utilisateur, 
@@ -151,8 +151,26 @@ const ConversationMessage = () => {
         }
     };
 
-    const navigateToChat = (conversation: Conversation) => {
+    // const navigateToChat = (conversation: Conversation) => {
+    //     console.log("Navigating to chat with conversation:", conversation);
+    //     router.push(`/messages/chat/${conversation.id_conversation}`);
+    // };
+
+    const navigateToChat = async (conversation: Conversation) => {
         console.log("Navigating to chat with conversation:", conversation);
+        
+        // Marquer les messages comme lus quand on ouvre la conversation
+        await markMessagesAsRead(conversation.id_conversation, userId);
+        
+        // Mettre à jour la liste des conversations pour retirer le badge
+        setConversations(prev => 
+            prev.map(conv => 
+                conv.id_conversation === conversation.id_conversation 
+                    ? { ...conv, messages_non_lus: 0 }
+                    : conv
+            )
+        );
+        
         router.push(`/messages/chat/${conversation.id_conversation}`);
     };
 

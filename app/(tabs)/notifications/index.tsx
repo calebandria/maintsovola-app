@@ -8,17 +8,12 @@ import {
   Image,
   SafeAreaView,
 } from 'react-native';
-
+import {useAuth} from '~/contexts/AuthContext'; // Adjust the import path as necessary
 import { supabase } from '~/lib/data'; // Adjust the import path as necessary
-import { useAuth } from '~/contexts/AuthContext';
-
-
 
 export default  function NotifScreen() {
-  const { user } = useAuth();
- //console.log('Current user:', user);
-  const userId = user?.id || 'null'; // Replace with actual user ID if available
-  console.log('Current user:', userId);
+  const user = useAuth();
+  console.log('User Auth:', user);
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -78,81 +73,44 @@ export default  function NotifScreen() {
     );
   };
  
-const id = '28ff57b7-fb92-4593-b239-5c56b0f44560'; // Remplace par l'ID réel de l'utilisateur (ex: user?.id)
+const id = '1'; // Remplace par l'ID réel de l'utilisateur (ex: user?.id)
   
-useEffect(() => {
-  const getNotify = async () => {
-    console.log('Fetching notifications for users:', id);
-    
-   
-    const { data: allData, error: allError } = await supabase
-      .from('utilisateur')
-      .select(`
-        id_utilisateur,
-        nom,
-        email,
-        prenoms,
-        photo_profil,
-        photo_couverture,
-      `)
-    // console.log('All notifications in table:', allData);
-   
-    const { data, error } = await supabase
-      .from('notification')
-      .select(`
-        id_notification,
-        id_expediteur,
-        id_destinataire,
-        message,
-        date_creation,
-        lu
-      `)
-      .eq('id_destinataire', userId)
-     // .eq('lu', false) // Filtrer pour les notifications non lues
-      .order('date_creation', { ascending: false });
-
-    console.log('Raw Supabase response:', { data, error });
-
-    if (error) {
-      console.error('Erreur Supabase :', error);
-      return; // Sortir si erreur
-    }
-
-    if (!data || data.length === 0) {
-      console.log('Aucune notification trouvée');
-      setNotifications([]); // Vider les notifications mockées
-      return;
-    }
-    const expediteurId = data[0].id_expediteur;
-    const { data: allData1, error: allError1 } = await supabase
-    .from('utilisateur')
-    .select(`
-      id_utilisateur,
-      nom,
-      email,
-      prenoms,
-      photo_profil,
-      photo_couverture,
-    `)
-    .eq('id_utilisateur', expediteurId);
- //const nom = allData1[0]?.nom || 'Utilisateur inconnu';
-    const formatted = data.map((notif: any) => ({
-      id: notif.id_notification, // Garder comme string (UUID)
-      type: 'comment',
-      user: allData1[0].nom || 'Utilisateur inconnu',
-      avatar: 'https://ui-avatars.com/api/?name=User',
-      action: 'vous a envoyé une notification',
-      time: new Date(notif.date_creation).toLocaleTimeString(),
-      isRead: notif.lu,
-      content: notif.message,
-    }));
-
-    console.log('Formatted notifications:', formatted);
-    setNotifications(formatted);
-  };
-
-  getNotify();
-}, [id]);
+  useEffect(() => {
+    const getNotify = async () => {
+      const { data, error } = await supabase
+        .from('notification')
+        .select(`
+          id_notification,
+          id_expediteur,
+          id_destinataire,
+          message,
+          date_creation,
+          lu
+        `)
+        .eq('id_expediteur', id)
+        .eq('id_destinataire', id)
+        .order('date_creation', { ascending: false });
+  
+      if (error) {
+        console.error('Erreur Supabase :', error);
+      } else {
+        const formatted = (data || []).map((notif: any) => ({
+          id: notif.id_notification,
+          type: 'comment', // Tu peux adapter si tu as un champ type
+          user: 'Utilisateur', // à remplacer si tu récupères le nom
+          avatar: 'https://ui-avatars.com/api/?name=User',
+          action: 'vous a envoyé une notification',
+          time: new Date(notif.date_creation).toLocaleTimeString(),
+          isRead: notif.lu,
+          content: notif.message,
+        }));
+        console.log('Notifications Supabase :', JSON.stringify(formatted, null, 2));
+        setNotifications(formatted);
+      }
+    };
+  
+    getNotify();
+  }, [id]);
   
   const markAllAsRead = () => {
     setNotifications(prev =>
