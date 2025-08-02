@@ -557,7 +557,7 @@ export const ModalDetails = ({ projectId, isVisible, onClose, userProfile }: Mod
                   <TouchableOpacity className="p-1" onPress={() => setFinJal(true)}>
                     <Text className={`text-2xl py-1 px-4 rounded-md w-full ${finJal && 'bg-white'}`}>
                       Jalons & Production
-                    </Text>Nou
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
