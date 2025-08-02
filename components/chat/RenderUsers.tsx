@@ -12,9 +12,7 @@ import { router } from 'expo-router';
 import { setNewConversation } from '~/services/conversation-message-service';
 interface RenderUsersProps {
   item: Utilisateur;
-  onPress: (Utilisateur: Utilisateur) => {
-    // loadCreateConversation()
-  };
+  onPress: (Utilisateur: Utilisateur) => void;
 }
 
 const RenderUsers: React.FC<RenderUsersProps> = ({ item, onPress }) => {
@@ -44,7 +42,6 @@ const RenderUsers: React.FC<RenderUsersProps> = ({ item, onPress }) => {
       className="flex-row items-center px-4 py-3 bg-white active:bg-gray-50"
       activeOpacity={0.7}
     >
-        <Text>ALLLLOOOOOOO</Text>
 
       {/* Avatar */}
       <View className="relative">
@@ -54,8 +51,6 @@ const RenderUsers: React.FC<RenderUsersProps> = ({ item, onPress }) => {
           }}
           className="w-14 h-14 rounded-full"
         />
-        {/* Indicateur en ligne (optionnel) */}
-        {/* <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white" /> */}
       </View>
 
       {/* Contenu principal */}

@@ -37,3 +37,9 @@ lerna-debug.log
 
 
 comptes.txt
+
+#Package log
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+lerna-debug.log

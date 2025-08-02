@@ -156,6 +156,14 @@ const ConversationMessage = () => {
     //     router.push(`/messages/chat/${conversation.id_conversation}`);
     // };
 
+    // const navigateToChat = async (conversation: Conversation) => {
+    // if(isLoadingConversations && !userId) {
+    //     return (
+    //         <View className='flex-1 justify-center items-center p-3 border-1 rounded-md'>
+    //             <Text className=" font-bold text-xs text-gray-60 p-10 border-2">Vous êtes Hors Ligne</Text>
+    //         </View>
+    //     )
+    // }
     const navigateToChat = async (conversation: Conversation) => {
         console.log("Navigating to chat with conversation:", conversation);
         

@@ -333,7 +333,7 @@ export async function uploadFile(uri: string, fileName: string, contentType: str
 
       // Upload to Supabase storage
       const { data, error } = await supabase.storage
-        .from('pieces_jointes')
+        .from('pieces-jointes-envoyes')
         .upload(fileName, buffer, {
           contentType,
           upsert: true,
@@ -345,7 +345,7 @@ export async function uploadFile(uri: string, fileName: string, contentType: str
 
       // Get public URL
       const { data: publicUrlData } = supabase.storage
-        .from('pieces_jointes')
+        .from('pieces-jointes-envoyes')
         .getPublicUrl(fileName);
 
       if (!publicUrlData?.publicUrl) {

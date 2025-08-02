@@ -1,16 +1,13 @@
+import { ScrollView, View, ActivityIndicator, Text } from 'react-native';
 import { Stack } from 'expo-router';
-import { View, ActivityIndicator, Text } from 'react-native';
 import ProfileHeader from '~/components/Dashboard/Profile/Header';
 import ProfileTabs from '~/components/Dashboard/Profile/Tabs';
 import { useAuth } from '~/contexts/AuthContext';
-import { useProfile } from '~/hooks/userhooks';
-import { useProjectsCount } from '~/hooks/userhooks';
-import { useFollowersCount } from '~/hooks/userhooks';
-import { useFollowingCount } from '~/hooks/userhooks';
+import { useProfile, useProjectsCount, useFollowersCount, useFollowingCount } from '~/hooks/userhooks';
 
 export default function UserLayout() {
   const { user } = useAuth();
-  const userId : string  = user?.id ?? "";
+  const userId: string = user?.id ?? '';
 
   const { profile, loading } = useProfile(userId);
   const { projectsCount } = useProjectsCount(userId);
@@ -30,21 +27,23 @@ export default function UserLayout() {
           <Text>Chargement du profil...</Text>
         </View>
       ) : profile ? (
-        <ProfileHeader
-          profile={profile}
-          isCurrentUser={true}
-          isFollowing={false}
-          followersCount={followersCount}
-          followingCount={followingCount}
-          projectsCount={projectsCount}
-          onFollowToggle={handleFollowToggle}
-        />
+        <ScrollView className="flex-1">
+          <ProfileHeader
+            profile={profile}
+            isCurrentUser={true}
+            isFollowing={false}
+            followersCount={followersCount}
+            followingCount={followingCount}
+            projectsCount={projectsCount}
+            onFollowToggle={handleFollowToggle}
+          />
+          <ProfileTabs />
+        </ScrollView>
       ) : (
         <View className="flex-1 justify-center items-center">
           <Text>Profil introuvable.</Text>
         </View>
       )}
-      <ProfileTabs />
     </View>
   );
 }

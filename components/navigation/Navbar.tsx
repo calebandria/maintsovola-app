@@ -3,6 +3,7 @@ import { useState } from "react"
 import { View, Text, TouchableOpacity, Modal, ScrollView, TouchableWithoutFeedback, Image } from "react-native"
 import { useRouter } from "expo-router"
 import { MaterialIcons } from "@expo/vector-icons"
+import { LucideDock, LucideFile, LucideFileArchive, LucideFileBadge, LucideFileBarChart, LucideFileBarChart2, LucideFileChartColumn, LucideFileEdit, LucideGlassWater, LucideHome, LucideLocate, LucideLocateFixed, LucideLocateOff, LucideLocationEdit, LucideMessageCircle, LucideMessageCircleCode, LucideMessageCircleHeart, LucideMessageCircleMore, LucideMessageCircleReply, LucideProjector, LucideUser, LucideUser2, LucideUserCircle, LucideWorkflow } from "lucide-react-native"
 
 interface NavItem {
   name: string
@@ -34,6 +35,7 @@ interface Message {
 const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) => {
   const [currentActiveIcon, setCurrentActiveIcon] = useState<string>(activeNavIcon)
   const [showProfile, setShowProfile] = useState<boolean>(false)
+  
   // const [showNotifications, setShowNotifications] = useState<boolean>(false)
   const router = useRouter()
 
@@ -96,7 +98,6 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
         isNew: false
       }
     ]);
-  
 
   // Compteurs dynamiques
   const notificationCount = notifications.filter((n) => n.isNew).length
@@ -117,7 +118,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
         router.push("/projet")
         break
       case "messages":
-        router.push("/messages")
+        router.replace("/messages")
         break
       case "profile":
 
@@ -126,23 +127,6 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
       default:
         console.log("Navigation vers:", iconId)
     }
-  }
-
-  const markNotificationAsRead = (notificationId: string) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) =>
-        notification.id === notificationId ? { ...notification, isNew: false } : notification,
-      ),
-    )
-  }
-
-  const markAllNotificationsAsRead = () => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) => ({
-        ...notification,
-        isNew: false,
-      })),
-    )
   }
 
   const renderNavIcon = (item: NavItem) => {
@@ -162,20 +146,14 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
             activeOpacity={0.8}
           >
             <View className="relative">
-              {(item.type === "profile" ) ? (
-                <Image 
-                    source={require("../../assets/profile.png")}
-                    style={{ width: 40, height: 40, borderRadius: 20 }}
-                  />
-              ) : ( 
-                  <MaterialIcons 
-                    name={item.name as any} 
-                    size={24} 
-                    className={`${isActive ? "text-green-600" : "text-gray-500"}`}
-                  />
-              )} 
-                {item.id === 'notifications' && renderBadge(notificationCount)}
-                {item.id === 'messages' && renderBadge(messageCount)}  
+              {
+                (item.id === "profile") ? (<LucideUserCircle size={24} color="#6b7280" />) 
+                : (item.id === "messages") ? (<LucideMessageCircleMore size={24} color="#6b7280" />)
+                : (item.id === "projet") ? (<LucideFileEdit size={24} color="#6b7280" />)
+                : (item.id === "location") ? (<LucideLocationEdit size={24} color="#6b7280" />)
+                : (<LucideHome size={24} color="#6b7280" />)
+              }
+              {item.id === 'messages' && renderBadge(messageCount)}
             </View>
           </TouchableOpacity>
         }
@@ -187,7 +165,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
     if (count === 0) return null;
     
     return (
-      <View className="absolute -top-2 -right-2 bg-red-500 rounded-full min-w-5 h-5 justify-center items-center border-2 border-white">
+      <View className="absolute -top-2 -right-2 bg-green-500 rounded-full min-w-5 h-5 justify-center items-center border-2 border-white">
         <Text className="text-white text-xs font-bold">
           {count > 9 ? '9+' : count.toString()}
         </Text>
@@ -195,75 +173,6 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
     );
   };
 
-  // const NotificationPopup = () => (
-  //   <Modal
-  //     visible={showNotifications}
-  //     transparent={true}
-  //     animationType="fade"
-  //     onRequestClose={() => setShowNotifications(false)}
-  //   >
-  //     <TouchableWithoutFeedback onPress={() => setShowNotifications(false)}>
-  //       <View className="flex-1 bg-black/50 justify-end">
-  //         <TouchableWithoutFeedback>
-  //           <View className="bg-white rounded-t-3xl shadow-2xl" style={{ maxHeight: "80%" }}>
-  //             <View className="flex-row justify-between items-center p-5 border-b border-gray-100">
-  //               <Text className="text-xl font-bold text-gray-900">Notifications</Text>
-  //               <TouchableOpacity
-  //                 onPress={() => setShowNotifications(false)}
-  //                 className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center"
-  //               >
-  //                 <MaterialIcons name="close" size={20} color="#666666" />
-  //               </TouchableOpacity>
-  //             </View>
-
-  //             {notificationCount > 0 && (
-  //               <View className="px-5 py-3 border-b border-gray-50">
-  //                 <TouchableOpacity
-  //                   className="flex-row items-center justify-center py-3 px-4 bg-green-50 border border-green-200 rounded-xl"
-  //                   onPress={markAllNotificationsAsRead}
-  //                 >
-  //                   <MaterialIcons name="done-all" size={18} color="#22c55e" />
-  //                   <Text className="text-green-600 ml-2 font-semibold">Marquer tout comme lu</Text>
-  //                 </TouchableOpacity>
-  //               </View>
-  //             )}
-
-  //             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-  //               {notifications.map((notification) => (
-  //                 <TouchableOpacity
-  //                   key={notification.id}
-  //                   className={`flex-row p-4 border-b border-gray-50 ${notification.isNew ? "bg-green-25" : ""}`}
-  //                   onPress={() => markNotificationAsRead(notification.id)}
-  //                   activeOpacity={0.7}
-  //                 >
-  //                   <View className="w-12 h-12 rounded-full bg-green-100 items-center justify-center mr-3">
-  //                     <MaterialIcons name="terrain" size={20} color="#22c55e" />
-  //                   </View>
-
-  //                   <View className="flex-1">
-  //                     <Text
-  //                       className={`text-base font-semibold mb-1 ${notification.isNew ? "text-gray-900" : "text-gray-600"}`}
-  //                     >
-  //                       {notification.title}
-  //                     </Text>
-  //                     <Text
-  //                       className={`text-sm leading-5 mb-2 ${notification.isNew ? "text-gray-700" : "text-gray-500"}`}
-  //                     >
-  //                       {notification.description}
-  //                     </Text>
-  //                     <Text className="text-xs text-gray-400">{notification.time}</Text>
-  //                   </View>
-
-  //                   {notification.isNew && <View className="w-3 h-3 rounded-full bg-green-500 ml-2 mt-2" />}
-  //                 </TouchableOpacity>
-  //               ))}
-  //             </ScrollView>
-  //           </View>
-  //         </TouchableWithoutFeedback>
-  //       </View>
-  //     </TouchableWithoutFeedback>
-  //   </Modal>
-  // )
 
   const ProfilePopup = () => (
     <Modal visible={showProfile} transparent={true} animationType="fade" onRequestClose={() => setShowProfile(false)}>
