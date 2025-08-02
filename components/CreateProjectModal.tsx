@@ -34,6 +34,12 @@ type Props = {
   userProfile?: { userProfile: string; userName: string };
 };
 
+interface ImageData {
+  uri: string;
+  url: string;
+  id: string;
+}
+
 const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
   useEffect(() => {
     const backAction = () => {
