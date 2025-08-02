@@ -336,7 +336,12 @@ const ChatScreen = () => {
     const isCurrentUser = item.id_expediteur === user?.id;
 
     return (
-      <View style={[styles.messageContainer, { justifyContent: isCurrentUser ? 'flex-end' : 'flex-start' }]}>
+      <View style={[
+        styles.messageContainer, 
+        // { justifyContent: isCurrentUser ? 'flex-end' : 'flex-start' },
+        { alignItems: isCurrentUser ? 'flex-end' : 'flex-start'}
+        
+        ]}>
         <View
           style={[
             styles.messageBubble,
@@ -476,7 +481,7 @@ const ChatScreen = () => {
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={(item) => item.id_message}
+          keyExtractor={(item: Message) => item.id_message}
           renderItem={renderMessage}
           style={styles.messageList}
           contentContainerStyle={[

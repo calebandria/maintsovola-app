@@ -1,5 +1,5 @@
 import type React from "react"
-import { View, Text,Image, TouchableOpacity } from "react-native"
+import { View, Text, Image, TouchableOpacity } from "react-native"
 import SearchBar from "../chat/SearchBar"
 import { useCallback, useState } from "react"
 
@@ -13,9 +13,9 @@ const Header: React.FC<HeaderProps> = ({ onSearchPress, onMenuPress }) => {
   const handleSearch = useCallback((text: string) => {
       setSearch(text);
   }, []);
-  
+     
   return (
-    <View className="w-full max-h-fitborder-b border-gray-200 shadow-sm bg-green-100">
+    <View className="w-full max-h-fit border-b border-gray-200 shadow-sm bg-green-100">
       <View className="flex-row items-center justify-between px-4 py-3">
         {/* Logo */}
         <View className="flex-row items-center">
@@ -23,18 +23,12 @@ const Header: React.FC<HeaderProps> = ({ onSearchPress, onMenuPress }) => {
             source={require("../../assets/maintsovola_logo_pm.png")}
             style={{ width: 40, height: 40, borderRadius: 20 }}
           />
-          <Text className="text-xl font-bold text-green-500 ml-2">Maintso</Text> <Text className="text-xl ml-2 font-bold text-gray-800">Vola</Text>
+          <Text className="text-2xl font-bold text-green-500 ml-2">Maintso</Text>
+          <Text className="text-2xl ml-2 font-bold text-gray-800">Vola</Text>
         </View>
-        
-        {/* Barre de recherche */}
-        <TouchableOpacity 
-          className={`"flex-1 w-fit rounded justify-center overflow-hidden"`}
-          >          
-          <SearchBar search={search} handleSearch={handleSearch} />
-        </TouchableOpacity>
       </View>
     </View>
   )
 }
 
-export default Header
+export default Header;

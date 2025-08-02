@@ -1,68 +1,86 @@
 import type React from "react"
-import { useState } from "react"
-import { View, Text, TouchableOpacity, Modal, ScrollView, TouchableWithoutFeedback, Image } from "react-native"
+import { useCallback, useEffect, useState } from "react"
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, Image } from "react-native"
 import { useRouter } from "expo-router"
-import { MaterialIcons } from "@expo/vector-icons"
-import { LucideDock, LucideFile, LucideFileArchive, LucideFileBadge, LucideFileBarChart, LucideFileBarChart2, LucideFileChartColumn, LucideFileEdit, LucideGlassWater, LucideHome, LucideLocate, LucideLocateFixed, LucideLocateOff, LucideLocationEdit, LucideMessageCircle, LucideMessageCircleCode, LucideMessageCircleHeart, LucideMessageCircleMore, LucideMessageCircleReply, LucideProjector, LucideUser, LucideUser2, LucideUserCircle, LucideWorkflow } from "lucide-react-native"
-
+// import { MaterialIcons } from "@expo/vector-icons"
+import { 
+  LucideActivity,
+  LucideBell,
+  LucideFileEdit, 
+  LucideHelpCircle, 
+  LucideHelpingHand, 
+  LucideHome, 
+  LucideLocationEdit,
+  LucideLogOut,
+  LucideMessageCircleMore, 
+  LucideMoon, 
+  LucideSettings, 
+  LucideUser, 
+  LucideUserCircle, 
+} from "lucide-react-native"
+import { useAuth } from "~/contexts/AuthContext";
+import { getCountUnreadMessages, getUser} from "~/services/conversation-message-service";
 interface NavItem {
   name: string
   type: string
   id: string
 }
 
-interface Notification {
-  id: string
-  title: string
-  description: string
-  time: string
-  isNew: boolean
-}
-
 interface NavbarProps {
   activeNavIcon?: string
   onNavChange?: (navId: string) => void
 }
-interface Message {
-  id: string;
-  sender: string;
-  content: string;
-  time: string;
-  isNew: boolean;
-}
+
 
 
 const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) => {
   const [currentActiveIcon, setCurrentActiveIcon] = useState<string>(activeNavIcon)
   const [showProfile, setShowProfile] = useState<boolean>(false)
+  const [messageCount, setMessagesCount] = useState<number>(10);
+  const [userData, setUserData] = useState<{username: string, photo_profil: string }>();
   
   // const [showNotifications, setShowNotifications] = useState<boolean>(false)
   const router = useRouter()
+  const { user } = useAuth();
+  const userId: string = user?.id ? user.id : "";
+  
+  const getAvatarColor = (userId: string) => {
+    const colors = ['#25D366', '#34B7F1', '#FF6B6B', '#4ECDC4', '#9B59B6', '#F39C12', '#E74C3C', '#27AE60'];
+    const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+    return colors[index];
+  };
 
-  // Données simulées pour les notifications
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "1",
-      title: "Nouveau terrain",
-      description: 'Un nouveau terrain "misa" a été ajouté en attente de validation',
-      time: "il y a 7 heures",
-      isNew: true,
-    },
-    {
-      id: "2",
-      title: "Nouveau terrain",
-      description: 'Un nouveau terrain "Fonenana Clément manova 1" a été ajouté en attente de validation',
-      time: "il y a 1 mois",
-      isNew: true,
-    },
-    {
-      id: "3",
-      title: "Validation terminée",
-      description: 'Votre terrain "Parcelle 123" a été validé avec succès',
-      time: "il y a 2 jours",
-      isNew: false,
-    },
-  ])
+  const fetchUnreadMessagesCount = async () => {
+    if (!userId) return;
+    try {
+      const count = await getCountUnreadMessages(userId);
+      setMessagesCount(count);
+    } catch (error) {
+      console.error("Error fetching unread messages count:", error);
+    }
+  };
+
+  const loadUser = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const userInfo = await getUser({ id: userId });
+      console.log("User data loaded:", userData);
+      if( userInfo && userInfo.username) {
+        setUserData(userInfo);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  // Appel initial pour charger le nombre de messages non lus
+  useEffect(() => {
+    fetchUnreadMessagesCount();
+  }, [userId]);
 
   // Icônes navbar - 5 icônes principales (sans notifications)
   const navItems: NavItem[] = [
@@ -75,33 +93,34 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
     { name: "RANALISOLOFO...", type: "profile", id: "profile" },
   ]
 
-    const [messages] = useState<Message[]>([
-      {
-        id: '1',
-        sender: 'Admin',
-        content: 'Votre terrain a été validé',
-        time: 'il y a 2 heures',
-        isNew: true
-      },
-      {
-        id: '2',
-        sender: 'Support',
-        content: 'Bienvenue sur Maintso Vola',
-        time: 'il y a 1 jour',
-        isNew: true
-      },
-      {
-        id: '3',
-        sender: 'Système',
-        content: 'Maintenance programmée ce soir',
-        time: 'il y a 2 jours',
-        isNew: false
-      }
-    ]);
+    // const [messages] = useState<Message[]>([
+    //   {
+    //     id: '1',
+    //     sender: 'Admin',
+    //     content: 'Votre terrain a été validé',
+    //     time: 'il y a 2 heures',
+    //     isNew: true
+    //   },
+    //   {
+    //     id: '2',
+    //     sender: 'Support',
+    //     content: 'Bienvenue sur Maintso Vola',
+    //     time: 'il y a 1 jour',
+    //     isNew: true
+    //   },
+    //   {
+    //     id: '3',
+    //     sender: 'Système',
+    //     content: 'Maintenance programmée ce soir',
+    //     time: 'il y a 2 jours',
+    //     isNew: false
+    //   }
+    // ]);
 
   // Compteurs dynamiques
-  const notificationCount = notifications.filter((n) => n.isNew).length
-  const messageCount = messages.filter(m => m.isNew).length;
+  const notificationCount = 10;
+  
+  // messages.filter(m => m.isNew).length;
   
   const handleNavIconPress = (iconId: string): void => {
     setCurrentActiveIcon(iconId)
@@ -129,6 +148,10 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
     }
   }
 
+
+  if (!userId) return <Text> Vous êtes non connecyté</Text>
+
+
   const renderNavIcon = (item: NavItem) => {
     const isActive = currentActiveIcon === item.id
 
@@ -147,7 +170,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
           >
             <View className="relative">
               {
-                (item.id === "profile") ? (<LucideUserCircle size={24} color="#6b7280" />) 
+                  (item.id === "profile") ? (<LucideUserCircle size={24} color="#6b7280" />) 
                 : (item.id === "messages") ? (<LucideMessageCircleMore size={24} color="#6b7280" />)
                 : (item.id === "projet") ? (<LucideFileEdit size={24} color="#6b7280" />)
                 : (item.id === "location") ? (<LucideLocationEdit size={24} color="#6b7280" />)
@@ -167,7 +190,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
     return (
       <View className="absolute -top-2 -right-2 bg-green-500 rounded-full min-w-5 h-5 justify-center items-center border-2 border-white">
         <Text className="text-white text-xs font-bold">
-          {count > 9 ? '9+' : count.toString()}
+          {count > 1000 ? '1000+' : count.toString()}
         </Text>
       </View>
     );
@@ -178,56 +201,53 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
     <Modal visible={showProfile} transparent={true} animationType="fade" onRequestClose={() => setShowProfile(false)}>
       <TouchableWithoutFeedback onPress={() => setShowProfile(false)}>
         <View className="flex-1">
-          {/* Dropdown positionné au-dessus de la navbar */}
           <View
             className="absolute top-[118px] right-4 bg-white rounded-2xl shadow-2xl border border-gray-100"
             style={{ width: 300 }}
           >
-            {/* Flèche pointant vers le bas */}
             <View className="absolute  -top-2 right-8 w-4 h-4 bg-white border-r border-b border-gray-100 transform rotate-45" />
-
-            {/* Header avec profil */}
             <View className="flex-row items-center p-4 border-b border-gray-100">
               <View className="w-12 h-12 rounded-full bg-green-100 items-center justify-center mr-3">
-                {/* <MaterialIcons name="person" size={24} color="#22c55e" /> */}
-                <Image 
-                  source={require("../../assets/profile.png")}
-                  style={{ width: 40, height: 40, borderRadius: 20 }}
+                <Image
+                  source={{ 
+                    uri: `${userData?.photo_profil !== '' ? userData?.photo_profil : `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}&background=${getAvatarColor(userId).substring(1)}&color=fff&size=56&font-size=0.6&rounded=true&bold=true`}` 
+                  }}
+                  className="w-full h-full"
+                  style={{ borderRadius: 28 }}
+                  onError={() => {
+                    console.warn("Avatar loading failed for:", userData?.username);
+                  }}
                 />
               </View>
               <View className="flex-1">
-                <Text className="text-lg font-bold text-gray-900">RANALISOLOFO</Text>
-                <Text className="text-sm text-gray-500">Voir votre profil</Text>
+                <Text className="text-lg font-bold text-gray-900">{userData?.username}</Text>
+                {/* <Text className="text-sm text-gray-500">Voir votre profil</Text> */}
               </View>
             </View>
 
-            {/* Options du menu */}
             <View className="py-2">
-              {/* Notifications avec badge */}
               <TouchableOpacity
                 className="flex-row items-center px-4 py-3 active:bg-gray-50"
                 onPress={() => {
                   setShowProfile(false)
-                  // setShowNotifications(true)
                   router.push("/notifications")
-                }}
-                
+                }}                
                 activeOpacity={0.8}
               >
                 <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center mr-3 relative">
-                  <MaterialIcons name="notifications" size={18} color="#374151" />
-                  {notificationCount > 0 && (
+                  <LucideBell size={18} color="#374151" className="absolute top-0 left-0 w-full h-full" />
+                  {/* {notificationCount > 0 && (
                     <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-4 h-4 justify-center items-center">
                       <Text className="text-white font-bold" style={{ fontSize: 9 }}>
                         {notificationCount > 9 ? "9+" : notificationCount.toString()}
                       </Text>
                     </View>
-                  )}
+                  )} */}
                 </View>
                 <View className="flex-1 flex-row items-center justify-between">
                   <Text className="text-gray-800 text-base">Notifications</Text>
                   {notificationCount > 0 && (
-                    <View className="bg-red-500 rounded-full px-2 py-1">
+                    <View className="bg-green-500 rounded-full px-2 py-1">
                       <Text className="text-white font-bold text-xs">
                         {notificationCount > 9 ? "9+" : notificationCount.toString()}
                       </Text>
@@ -245,7 +265,8 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
                 activeOpacity={0.8}
               >
                 <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center mr-3">
-                  <MaterialIcons name="person" size={18} color="#374151" />
+                  {/* <MaterialIcons name="person" size={18} color="#374151" /> */}
+                  <LucideUser size={18} color="#374151" className="absolute top-0 left-0 w-full h-full" />
                 </View>
                 <Text className="text-gray-800 text-base">Profil</Text>
               </TouchableOpacity>
@@ -259,7 +280,8 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
                 activeOpacity={0.8}
               >
                 <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center mr-3">
-                  <MaterialIcons name="settings" size={18} color="#374151" />
+                  {/* <MaterialIcons name="settings" size={18} color="#374151" /> */}
+                  <LucideSettings size={18} color="#374151" className="absolute top-0 left-0 w-full h-full" />
                 </View>
                 <Text className="text-gray-800 text-base">Paramètres</Text>
               </TouchableOpacity>
@@ -273,12 +295,13 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
                 activeOpacity={0.8}
               >
                 <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center mr-3">
-                  <MaterialIcons name="help" size={18} color="#374151" />
+                  {/* <MaterialIcons name="help" size={18} color="#374151" /> */}
+                  <LucideHelpCircle size={18} color="#000" />
                 </View>
                 <Text className="text-gray-800 text-base">Aide</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 className="flex-row items-center px-4 py-3 active:bg-gray-50"
                 onPress={() => {
                   setShowProfile(false)
@@ -287,10 +310,10 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
                 activeOpacity={0.8}
               >
                 <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center mr-3">
-                  <MaterialIcons name="privacy-tip" size={18} color="#374151" />
+                  <LucideActivity size={18} color="#000" />
                 </View>
                 <Text className="text-gray-800 text-base">Confidentialité</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
               <TouchableOpacity
                 className="flex-row items-center px-4 py-3 active:bg-gray-50"
@@ -301,7 +324,8 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
                 activeOpacity={0.8}
               >
                 <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center mr-3">
-                  <MaterialIcons name="dark-mode" size={18} color="#374151" />
+                  {/* <MaterialIcons name="dark-mode" size={18} color="#374151" /> */}
+                  <LucideMoon size={18} color="#000" className="absolute top-0 left-0 w-full h-full" />
                 </View>
                 <Text className="text-gray-800 text-base">Mode sombre</Text>
               </TouchableOpacity>
@@ -318,7 +342,8 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
                 activeOpacity={0.8}
               >
                 <View className="w-8 h-8 rounded-full bg-red-100 items-center justify-center mr-3">
-                  <MaterialIcons name="logout" size={18} color="#EF4444" />
+                  {/* <MaterialIcons name="logout" size={18} color="#EF4444" /> */}
+                  <LucideLogOut size={18} color="#EF4444" className="absolute top-0 left-0 w-full h-full" />
                 </View>
                 <Text className="text-red-600 text-base">Se déconnecter</Text>
               </TouchableOpacity>
@@ -330,17 +355,15 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
   )
 
   return (
-    <>
-      <View className="bg-white border-t border-gray-200 p-1 shadow-sm mb-1">
-        <View className="flex-row items-center" style={{ height: 48 }}>
-          {navItems.map(renderNavIcon)}
-          <ProfilePopup />
-        </View>
+    <View className="bg-white border-t border-gray-200 p-1 shadow-sm mb-1">
+      <View className="flex-row items-center" style={{ height: 48 }}>
+        {navItems.map(renderNavIcon)}
+        <ProfilePopup />
+      </View>
     </View>
-
-      {/* <NotificationPopup /> */}
-    </>
   )
 }
 
 export default Navbar
+
+

@@ -15,7 +15,7 @@ import {
     ActivityIndicator,
     Dimensions,
 } from 'react-native';
-import { getAllUsers, getConversation, markMessagesAsRead, setNewConversation, subscribeToConversations } from '~/services/conversation-message-service';
+import { getAllUsers, getConversation, setNewConversation, subscribeToConversations } from '~/services/conversation-message-service';
 import { 
     Conversation,
     Utilisateur, 
@@ -36,8 +36,6 @@ const ConversationMessage = () => {
     const [everyone, setEveryone] = useState<Utilisateur[]>([]);
     const [search, setSearch] = useState('');
     const [searchUsers, setSearchUsers] = useState('');
-    const [filteredUsers, setFilteredUsers] = useState<Utilisateur[]>([]);
-    const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
     const [isUserModalVisible, setUserModalVisible] = useState(false);
     const [isLoadingConversations, setIsLoadingConversations] = useState(true);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
@@ -45,6 +43,10 @@ const ConversationMessage = () => {
     const { user } = useAuth();
     const userId: string = user?.id || '';
 
+    // Mémoriser l'utilisateur actuel pour éviter les re-renders inutiles
+    const currentUser = useMemo(() => user, [user?.id]);
+
+    // Mémoriser les fonctions de fetch pour éviter les re-créations
     const fetchConversations = useCallback(async () => {
         if (!userId) return;
         setIsLoadingConversations(true);
@@ -71,34 +73,44 @@ const ConversationMessage = () => {
         }
     }, [userId]);
 
-    useEffect(() => {
-        fetchConversations();
-        fetchEveryOne();
-    }, [fetchConversations, fetchEveryOne]);
+    // Mémoriser la création d'un map des utilisateurs pour un accès plus rapide
+    const usersMap = useMemo(() => {
+        const map = new Map<string, Utilisateur>();
+        everyone.forEach(user => {
+            map.set(user.id_utilisateur, user);
+        });
+        return map;
+    }, [everyone]);
 
-    const filteredConversationsMemo = useMemo(() => {
+    // Mémoriser les conversations filtrées
+    const filteredConversations = useMemo(() => {
         if (!search.trim()) {
             return conversations;
         }
+        
         const lowerText = search.toLowerCase();
         return conversations.filter((conv) => {
             const otherUserId = conv.id_utilisateur1 === userId
                 ? conv.id_utilisateur2
                 : conv.id_utilisateur1;
-            const user = everyone.find(u => u.id_utilisateur === otherUserId);
+            
+            const user = usersMap.get(otherUserId);
             if (!user) return false;
+            
             return (
                 user.nom?.toLowerCase().includes(lowerText) ||
                 user.prenoms?.toLowerCase().includes(lowerText) ||
                 user.email?.toLowerCase().includes(lowerText)
             );
         });
-    }, [search, conversations, everyone, userId]);
+    }, [search, conversations, usersMap, userId]);
 
-    const filteredUsersMemo = useMemo(() => {
+    // Mémoriser les utilisateurs filtrés
+    const filteredUsers = useMemo(() => {
         if (!searchUsers.trim()) {
             return everyone;
         }
+        
         const lowerText = searchUsers.toLowerCase();
         return everyone.filter((user) => {
             return (
@@ -109,14 +121,7 @@ const ConversationMessage = () => {
         });
     }, [searchUsers, everyone]);
 
-    useEffect(() => {
-        setFilteredConversations(filteredConversationsMemo);
-    }, [filteredConversationsMemo]);
-
-    useEffect(() => {
-        setFilteredUsers(filteredUsersMemo);
-    }, [filteredUsersMemo]);
-
+    // Mémoriser les handlers pour éviter les re-créations
     const handleSearch = useCallback((text: string) => {
         setSearch(text);
     }, []);
@@ -124,6 +129,96 @@ const ConversationMessage = () => {
     const handleSearchUsers = useCallback((text: string) => {
         setSearchUsers(text);
     }, []);
+
+    const navigateToChat = useCallback((conversation: Conversation) => {
+        console.log("Navigating to chat with conversation:", conversation);
+        router.push(`/messages/chat/${conversation.id_conversation}`);
+    }, []);
+
+    // Mémoriser les handlers de modal
+    const handleModalClose = useCallback(() => {
+        setUserModalVisible(false);
+    }, []);
+
+    const handleModalOpen = useCallback(() => {
+        setUserModalVisible(true);
+    }, []);
+
+    const handleUserPress = useCallback(async (user: Utilisateur) => {
+        setUserModalVisible(false);
+        // Logique pour créer une nouvelle conversation si nécessaire
+    }, []);
+
+    // Mémoriser les composants pour éviter les re-renders
+    const LoadingComponent = useMemo(() => (
+        <View className="flex-1 justify-center items-center py-20">
+            <ActivityIndicator size="large" color="#25D366" />
+            <Text className="text-gray-500 mt-4 text-base">
+                Chargement des conversations...
+            </Text>
+        </View>
+    ), []);
+
+    const EmptyComponent = useMemo(() => (
+        <View className="flex-1 justify-center items-center py-20">
+            <Text className="text-gray-500 text-lg font-medium mb-2">
+                Aucune conversation
+            </Text>
+            <Text className="text-gray-400 text-center px-8">
+                Commencez une nouvelle conversation en appuyant sur le bouton +
+            </Text>
+        </View>
+    ), []);
+
+    const UserModalEmptyComponent = useMemo(() => (
+        <View className="py-10 items-center">
+            <Text className="text-gray-500">Aucun utilisateur trouvé</Text>
+        </View>
+    ), []);
+
+    const UserModalLoadingComponent = useMemo(() => (
+        <View className="flex-1 justify-center items-center py-10">
+            <ActivityIndicator size="large" color="#25D366" />
+            <Text className="text-gray-500 mt-2">Chargement des utilisateurs...</Text>
+        </View>
+    ), []);
+
+    // Mémoriser le style du container principal
+    const containerStyle = useMemo(() => ({ 
+        flex: 1, 
+        minHeight: screenHeight - 200 
+    }), [screenHeight]);
+
+    const contentContainerStyle = useMemo(() => ({ 
+        flexGrow: 1 
+    }), []);
+
+    // Mémoriser les keyExtractor pour les FlatList
+    const conversationKeyExtractor = useCallback((item: Conversation) => 
+        item.id_conversation.toString(), []);
+    
+    const userKeyExtractor = useCallback((item: Utilisateur) => 
+        item.id_utilisateur, []);
+
+    // Mémoriser les renderItem pour les FlatList
+    const renderConversationItem = useCallback(({ item }: { item: Conversation }) => (
+        <RenderConversation 
+            item={item} 
+            onPress={navigateToChat}
+        />
+    ), [navigateToChat]);
+
+    const renderUserItem = useCallback(({ item }: { item: Utilisateur }) => (
+        <RenderUsers 
+            item={item} 
+            onPress={handleUserPress}
+        />
+    ), [handleUserPress]);
+
+    useEffect(() => {
+        fetchConversations();
+        fetchEveryOne();
+    }, [fetchConversations, fetchEveryOne]);
 
     useEffect(() => {
         if (!userId) return;
@@ -137,81 +232,30 @@ const ConversationMessage = () => {
         };
     }, [userId]);
 
-    const createConversation = async (otherUserId: string, currentUserId: string) => {
-        try {
-            const new_id_conversation = await setNewConversation({ currentUserId, otherUserId });
-            if (!new_id_conversation) {
-                console.warn("No conversation ID returned.");
-                return;
-            }
-            console.log("Creating conversation with otherUserId:", otherUserId, "and currentUserId:", currentUserId);
-            router.push(`/messages/chat/${new_id_conversation}`);
-        } catch (error) {
-            console.error("Error fetching conversation:", error);
-        }
-    };
+    // Mémoriser la condition de chargement
+    const shouldShowOfflineMessage = useMemo(() => 
+        isLoadingConversations && !userId, [isLoadingConversations, userId]);
 
-    // const navigateToChat = (conversation: Conversation) => {
-    //     console.log("Navigating to chat with conversation:", conversation);
-    //     router.push(`/messages/chat/${conversation.id_conversation}`);
-    // };
-
-    // const navigateToChat = async (conversation: Conversation) => {
-    // if(isLoadingConversations && !userId) {
-    //     return (
-    //         <View className='flex-1 justify-center items-center p-3 border-1 rounded-md'>
-    //             <Text className=" font-bold text-xs text-gray-60 p-10 border-2">Vous êtes Hors Ligne</Text>
-    //         </View>
-    //     )
-    // }
-    const navigateToChat = async (conversation: Conversation) => {
-        console.log("Navigating to chat with conversation:", conversation);
-        
-        // Marquer les messages comme lus quand on ouvre la conversation
-        await markMessagesAsRead(conversation.id_conversation, userId);
-        
-        // Mettre à jour la liste des conversations pour retirer le badge
-        setConversations(prev => 
-            prev.map(conv => 
-                conv.id_conversation === conversation.id_conversation 
-                    ? { ...conv, messages_non_lus: 0 }
-                    : conv
-            )
+    if (shouldShowOfflineMessage) {
+        return (
+            <View className='flex-1 justify-center items-center p-3 border-1 rounded-md'>
+                <Text className=" font-bold text-xs text-gray-60 p-10 border-2">
+                    Vous êtes Hors Ligne
+                </Text>
+            </View>
         );
-        
-        router.push(`/messages/chat/${conversation.id_conversation}`);
-    };
+    }
 
-    const LoadingComponent = () => (
-        <View className="flex-1 justify-center items-center py-20">
-            <ActivityIndicator size="large" color="#25D366" />
-            <Text className="text-gray-500 mt-4 text-base">
-                Chargement des conversations...
-            </Text>
-        </View>
-    );
-
-    const EmptyComponent = () => (
-        <View className="flex-1 justify-center items-center py-20">
-            <Text className="text-gray-500 text-lg font-medium mb-2">
-                Aucune conversation
-            </Text>
-            <Text className="text-gray-400 text-center px-8">
-                Commencez une nouvelle conversation en appuyant sur le bouton +
-            </Text>
-        </View>
-    );
-      
     return (
-        <View style={{ flex: 1, minHeight: screenHeight - 200 }}>
+        <View style={containerStyle}>
             <View className="mb-4">
                 <SearchBar search={search} handleSearch={handleSearch} />
             </View>
 
             <Modal
                 isVisible={isUserModalVisible}
-                onBackdropPress={() => setUserModalVisible(false)}
-                onBackButtonPress={() => setUserModalVisible(false)}
+                onBackdropPress={handleModalClose}
+                onBackButtonPress={handleModalClose}
                 style={{ justifyContent: 'flex-end', margin: 0 }}
             >
                 <View className="bg-white rounded-t-2xl p-4 max-h-[70%]">
@@ -220,7 +264,7 @@ const ConversationMessage = () => {
                             Nouveau message
                         </Text>
                         <TouchableOpacity 
-                            onPress={() => setUserModalVisible(false)}
+                            onPress={handleModalClose}
                             className="p-2 -mr-2"
                         >
                             <LucideX size={24} color="#666" />
@@ -237,27 +281,13 @@ const ConversationMessage = () => {
                     </View>
 
                     {isLoadingUsers ? (
-                        <View className="flex-1 justify-center items-center py-10">
-                            <ActivityIndicator size="large" color="#25D366" />
-                            <Text className="text-gray-500 mt-2">Chargement des utilisateurs...</Text>
-                        </View>
+                        UserModalLoadingComponent
                     ) : (
                         <FlatList
                             data={filteredUsers}
-                            keyExtractor={(item) => item.id_utilisateur}
-                            renderItem={({ item }) => (
-                                <RenderUsers 
-                                    item={item} 
-                                    onPress={async () => {
-                                        setUserModalVisible(false);
-                                    }}
-                                />
-                            )}
-                            ListEmptyComponent={() => (
-                                <View className="py-10 items-center">
-                                    <Text className="text-gray-500">Aucun utilisateur trouvé</Text>
-                                </View>
-                            )}
+                            keyExtractor={userKeyExtractor}
+                            renderItem={renderUserItem}
+                            ListEmptyComponent={UserModalEmptyComponent}
                             showsVerticalScrollIndicator={false}
                         />
                     )}
@@ -266,29 +296,20 @@ const ConversationMessage = () => {
 
             <View className="flex-1">
                 {isLoadingConversations ? (
-                    <LoadingComponent />
+                    LoadingComponent
                 ) : (
                     <FlatList
                         data={filteredConversations}
-                        keyExtractor={(item: Conversation) => item.id_conversation.toString()}
-                        renderItem={({ item }) => (
-                            <RenderConversation 
-                                item={item} 
-                                onPress={(conv: Conversation) => navigateToChat(conv)}
-                            />
-                        )}
-                        ListEmptyComponent={<EmptyComponent />}
-                        contentContainerStyle={{ 
-                            flexGrow: 1,
-                        }}
+                        keyExtractor={conversationKeyExtractor}
+                        renderItem={renderConversationItem}
+                        ListEmptyComponent={EmptyComponent}
+                        contentContainerStyle={contentContainerStyle}
                         showsVerticalScrollIndicator={false}
                     />
                 )}
             </View>
 
-            <FloatingActionButton 
-                onPress={() => setUserModalVisible(true)}
-            />
+            <FloatingActionButton onPress={handleModalOpen} />
         </View>
     );
 };
