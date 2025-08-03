@@ -498,7 +498,7 @@ const ProjectCarouselSkeleton: React.FC<{ count: number }> = ({ count }) => (
 );
 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
+import { router } from 'expo-router';
 
 type RootStackParamList = {
   Feed: { culture?: string } | undefined;
@@ -800,7 +800,7 @@ const HomeScreen: React.FC = () => {
 
         <TouchableOpacity
           style={styles.projectButton}
-          onPress={() => router.push({pathname: '/(auth)/login', params: { id: item.id.toString() }})}>
+          onPress={() => router.replace('/(auth)/login', { id: item.id })}>
           <Text style={styles.projectButtonText}>Voir le projet</Text>
           <ArrowRight size={16} color="white" />
         </TouchableOpacity>
@@ -812,8 +812,7 @@ const HomeScreen: React.FC = () => {
     <Animated.View key={culture.id} entering={FadeInUp.delay(index * 100)} style={styles.cultureCard}>
       <TouchableOpacity
         style={{ alignItems: 'center' }}
-        onPress={() => router.navigate({pathname: '/(auth)/login', params: { culture: culture.name.toString() }})}>
-
+        onPress={() => router.replace('/(auth)/login', { culture: culture.name })}>
         <Image
           source={{ uri: culture.image }}
           style={styles.cultureImage}
@@ -829,7 +828,7 @@ const HomeScreen: React.FC = () => {
     <Animated.View key={project.id} entering={FadeInRight.delay(index * 100)}>
       <TouchableOpacity
         style={styles.recentProjectItem}
-        onPress={() => router.navigate({pathname: '/(auth)/login', params: { id: project.id.toString() }})}>
+        onPress={() => router.replace('/(auth)/login', { id: project.id })}>
         <View style={styles.recentProjectContent}>
           <View style={styles.recentProjectInfo}>
             <Text style={styles.recentProjectTitle}>{project.title}</Text>
@@ -917,7 +916,7 @@ const HomeScreen: React.FC = () => {
             <View style={{ alignItems: 'center' }}>
               <TouchableOpacity
                 style={styles.ctaButton}
-                onPress={() => router.navigate('/(auth)/login')}>
+                onPress={() => router.replace('/(auth)/login')}>
                 <Text style={styles.ctaButtonText}>Découvrir les projets</Text>
                 <ChevronRight size={20} color="#10b981" />
               </TouchableOpacity>
