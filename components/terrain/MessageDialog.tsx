@@ -111,10 +111,10 @@ const MessageDialog: React.FC<MessageDialogProps> = ({
     <Dialog visible={isOpen} onDismiss={onClose}>
       <DialogContent style={styles.dialogContent}>
         <DialogHeader>
-          <DialogTitle>Message à {technicien.name}</DialogTitle>
+            <DialogTitle>Message à {technicien.name}</DialogTitle>
         </DialogHeader>
         
-        <View style={styles.formContainer}>
+        <ScrollView contentContainerStyle={styles.formContainer}>
           <TextInput
             style={styles.textArea}
             placeholder="Écrivez votre message ici..."
@@ -124,7 +124,7 @@ const MessageDialog: React.FC<MessageDialogProps> = ({
             numberOfLines={6}
             textAlignVertical="top"
           />
-          
+          </ScrollView>
           <DialogFooter style={styles.footer}>
             <Button
               variant="outline"
@@ -133,6 +133,7 @@ const MessageDialog: React.FC<MessageDialogProps> = ({
               title="Annuler"
               style={styles.cancelButton}
             />
+          
             <Button 
               onPress={handleSubmit}
               disabled={isSubmitting || !message.trim()}
@@ -140,7 +141,7 @@ const MessageDialog: React.FC<MessageDialogProps> = ({
               style={styles.sendButton}
             />
           </DialogFooter>
-        </View>
+        
       </DialogContent>
     </Dialog>
   );
@@ -150,23 +151,31 @@ const styles = StyleSheet.create({
   dialogContent: {
     width: Platform.OS === 'web' ? 400 : '90%',
     maxHeight: Platform.OS === 'web' ? 500 : '80%',
+    borderColor: '#6b7280',
+    backgroundColor: '#f9fafb',
+    borderRadius: 20,
   },
   formContainer: {
-    flex: 1,
+    flexGrow: 1,
+    justifyContent: 'space-between'
   },
   textArea: {
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 8,
-    padding: 12,
+    padding: 10,
     minHeight: 120,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 10,
+    flex: 1,
+    textAlignVertical: 'top',
   },
+ 
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
+    paddingTop: 40,
   },
   cancelButton: {
     flex: 1,

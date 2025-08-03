@@ -11,6 +11,8 @@ import TerrainTable from '../../../components/terrain/TerrainTable';
 import TerrainEditDialog from '../../../components/terrain/TerrainEditDialog';
 import TerrainCard from '../../../components/terrain/TerrainCard';
 import MessageDialog from '../../../components/terrain/MessageDialog';
+import { grey100 } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
+import { red } from 'react-native-reanimated/lib/typescript/Colors';
 
 const Header = ({ onCreateTerrain }: { onCreateTerrain: () => void }) => {
   return (
@@ -302,10 +304,12 @@ export default function TerrainScreen() {
    //icii
 const filteredTerrains = activeTab === 'En attente'
   ? pendingTerrains.filter((terrain) =>
-      terrain.nom_terrain.toLowerCase().includes(searchQuery.toLowerCase())
+      [terrain.nom_terrain, terrain.region_name, terrain.district_name, terrain.commune_name, terrain.techniqueNom, terrain.superviseurNom, terrain.tantsahaNom, terrain.surface_proposee?.toString()]
+        .some((field) => (field?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
     )
   : validatedTerrains.filter((terrain) =>
-      terrain.nom_terrain.toLowerCase().includes(searchQuery.toLowerCase())
+      [terrain.nom_terrain, terrain.region_name, terrain.district_name, terrain.commune_name, terrain.techniqueNom, terrain.superviseurNom, terrain.tantsahaNom, terrain.surface_proposee?.toString()]
+        .some((field) => (field?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
     );
   return (
     <View style={styles.container}>
@@ -551,9 +555,9 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     height: 40,
-    borderColor: '#e5e7eb',
+    borderColor: '#9ca3af',
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     paddingHorizontal: 10,
     fontSize: 16,
   },
