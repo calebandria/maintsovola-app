@@ -1,14 +1,12 @@
-// import React from 'react';
 import { View } from 'react-native';
-import MessageList from '../../../components/messaging/MessageList';
+import ConversationMessage from '../../../components/chat/ConversationMessage';
 
 export default function MessagesScreen() {
   return (
     <View className="flex-1">
-      {/* <MessageList /> */}
-      <MessageList />
-
+      <ConversationMessage />
     </View>
   );
 }
+
 
