@@ -9,7 +9,8 @@
     "prebuild": "expo prebuild",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "generate-types": "npx supabase gen types typescript --project-id $PROJECT_ID --schema public > ./types/database.types.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -47,8 +48,8 @@
     "react-native-gesture-handler": "~2.24.0",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-image-picker": "^8.2.1",
-    "react-native-paper": "^5.14.5",
     "react-native-maps": "1.20.1",
+    "react-native-paper": "^5.14.5",
     "react-native-paper-tabs": "^0.11.4",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "^5.4.0",

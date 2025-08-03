@@ -24,7 +24,7 @@ interface StatCardProps {
   valueColor?: string;
 }
 
-const StatCard = React.memo(
+export const StatCard = React.memo(
   ({ icon, label, value, valueColor = 'text-primary' }: StatCardProps) => (
     <View className="border border-gray-300 p-3 rounded-lg">
       <View className="flex-row items-center gap-2 mb-2">

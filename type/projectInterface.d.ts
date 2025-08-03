@@ -1,3 +1,4 @@
+import { Database } from './database.types';
 export interface ProjectData {
   id_projet: number;
   titre?: string;
