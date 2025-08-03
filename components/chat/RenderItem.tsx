@@ -9,6 +9,7 @@ import {
 import { Conversation } from "~/type/messageInterface";
 import { useAuth } from '~/contexts/AuthContext';
 import { getLastMessage, getUsername, getUser, getUnreadMessagesCount } from '~/services/conversation-message-service'; 
+import { useHideNavbar } from '~/contexts/NavContext';
 
 interface RenderConversationProps {
   item: Conversation;
@@ -23,7 +24,8 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
   const [lastMesage, setLastMessage] = useState<string>();
   const [photoProfil, setPhotoProfil] = useState<string>();
   const [unreadCount, setUnreadCount] = useState<number>(0);
-
+  useHideNavbar(); // Utilisation du hook pour cacher la navbar
+  
   useEffect(() => {
     const fetchUsername = async () => {
       const { username, photo_profil} = await getUser({id: otherUserId});

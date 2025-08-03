@@ -1,7 +1,7 @@
 // app/(auth)/login.tsx - Version améliorée avec gestion d'erreurs et animations fluides
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/Label';
+import { Button } from '~/components/ui/Button';
+import { Input } from '~/components/ui/Input';
+import { Label } from '~/components/ui/Label';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
 import { useState, useRef } from 'react';

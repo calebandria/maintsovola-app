@@ -11,10 +11,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useProjects } from '@/hooks/useProject';
-import type { ProjectData } from '@/type/projectInterface';
-import { ModalAddStyled, ModalDetails } from '@/components/project/Modal';
-import { useAuth } from '@/contexts/AuthContext';
+import { useProjects } from '~/hooks/useProject';
+import type { ProjectData } from '~/type/projectInterface';
+import { ModalAddStyled, ModalDetails } from '~/components/project/Modal';
+import { useAuth } from '~/contexts/AuthContext';
 import { router } from 'expo-router';
 
 const colorCode = {

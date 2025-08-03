@@ -12,12 +12,12 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '@/utils/supabase';
+import { supabase } from '~/lib/data';
 import { v4 as uuidv4 } from 'uuid';
-import { CultureData } from '@/types/cultureData';
-import { ProjectData } from '@/type/projectInterface';
-import { TerrainData } from '@/types/terrainData';
-import { Checkbox } from '@/components/ui/Checkbox';
+import { CultureData } from '~/types/cultureData';
+import { ProjectData } from '~/type/projectInterface';
+import { TerrainData } from '~/types/terrainData';
+import { Checkbox } from '~/components/ui/Checkbox';
 
 // --- UTILS ---
 function daysBetween(dateA?: string, dateB?: string): number {

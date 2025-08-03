@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from "react-native"
-import { useConversations } from "../hooks/useConversations"
+import { useConversations } from "~/hooks/useConversations"
 
 interface ConversationsListUpdatedProps {
   currentUserId: string

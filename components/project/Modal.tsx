@@ -1,5 +1,5 @@
-import { useDetails } from "@/hooks/useProject";
-import { ProjectData } from "@/type/projectInterface";
+import { useDetails } from "~/hooks/useProject";
+import { ProjectData } from "~/type/projectInterface";
 import { useState } from "react";
 import { ActivityIndicator, Modal, View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import CreateProjectModal from "../CreateProjectModal";

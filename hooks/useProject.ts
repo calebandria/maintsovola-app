@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/utils/supabase';
-import type { ProjectData, ProjectDataDetails } from '@/type/projectInterface';
+import { supabase } from '~/utils/supabase';
+import type { ProjectData, ProjectDataDetails } from '~/type/projectInterface';
 
 export function useProjects() {
   const [data, setData] = useState<ProjectData[]>([]);

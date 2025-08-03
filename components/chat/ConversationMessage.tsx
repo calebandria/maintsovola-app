@@ -21,14 +21,18 @@ import {
     Utilisateur, 
 } from '~/type/messageInterface';
 import RenderConversation from './RenderItem';
-import { router } from 'expo-router';
+import { 
+    router, 
+    useSegments
+} from 'expo-router';
 import RenderUsers from './RenderUsers';
 import Modal from 'react-native-modal';
 import { LucideX } from 'lucide-react-native';
-import { supabase } from '~/lib/data';
+import { supabase } from '~/lib/supabase';
 import SearchBar from './SearchBar';
 import FloatingActionButton from './FloatingActionButton';
-
+import ReturnBack from '../ReturnBack';
+import { useLastPage } from '~/contexts/LastPageContext';
 const { height: screenHeight } = Dimensions.get('window');
 
 const ConversationMessage = () => {
@@ -41,9 +45,12 @@ const ConversationMessage = () => {
     const [isUserModalVisible, setUserModalVisible] = useState(false);
     const [isLoadingConversations, setIsLoadingConversations] = useState(true);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-
+    const segments = useSegments();
     const { user } = useAuth();
+    const { setLastPage } = useLastPage();
+
     const userId: string = user?.id || '';
+    // setLastPage(segments.join('/'));
 
     const fetchConversations = useCallback(async () => {
         if (!userId) return;
@@ -70,7 +77,11 @@ const ConversationMessage = () => {
             setIsLoadingUsers(false);
         }
     }, [userId]);
-
+    
+    useEffect(() => {
+        setLastPage(`/${segments.join('/')}`);
+    }, [segments, setLastPage]);
+      
     useEffect(() => {
         fetchConversations();
         fetchEveryOne();
@@ -204,10 +215,15 @@ const ConversationMessage = () => {
       
     return (
         <View style={{ flex: 1, minHeight: screenHeight - 200 }}>
+            <Text className="text-lg font-bold text-gray-800 px-4 py-2">
+                {segments[segments.length - 1]}
+            </Text>
             <View className="mb-4">
                 <SearchBar search={search} handleSearch={handleSearch} />
             </View>
-
+            <View className='flex-row items-center justify-between px-4 py-2 bg-white border-b border-gray-200'>
+                <ReturnBack />
+            </View>
             <Modal
                 isVisible={isUserModalVisible}
                 onBackdropPress={() => setUserModalVisible(false)}

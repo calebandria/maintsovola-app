@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { supabase } from '@/utils/supabase';
-import { JalonData } from '@/types/jalonData';
-import { CultureData } from '@/types/cultureData';
+import { supabase } from '~/lib/data';
+import { JalonData } from '~/types/jalonData';
+import { CultureData } from '~/types/cultureData';
 
 const ProjectMilestones = ({ projectId }:{projectId: number}) => {
   const [jalons, setJalons] = useState<JalonData[]>([]);
