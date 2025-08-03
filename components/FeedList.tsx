@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, ActivityIndicator, Text, RefreshControl, StyleSheet } from 'react-native';
-import FeedCard from './FeedCard';
+import FeedCard from './feed/FeedCard';
 import { AgriculturalProject } from '~/hooks/use-project-data';
 
 // Importer le type depuis le fichier de types

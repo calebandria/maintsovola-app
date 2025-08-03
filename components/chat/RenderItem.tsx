@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Conversation } from "~/type/messageInterface";
 import { useAuth } from '~/contexts/AuthContext';
-import { getLastMessage, getUsername, getUser } from '~/services/conversation-message-service'; 
+import { getLastMessage, getUsername, getUser, getUnreadMessagesCount } from '~/services/conversation-message-service'; 
 
 interface RenderConversationProps {
   item: Conversation;
@@ -22,13 +22,11 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
   const [otherUsername, setOtherUsername] = useState<string>('Utilisateur');
   const [lastMesage, setLastMessage] = useState<string>();
   const [photoProfil, setPhotoProfil] = useState<string>();
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   useEffect(() => {
     const fetchUsername = async () => {
-      // const username = await getUsername({ id: otherUserId });
       const { username, photo_profil} = await getUser({id: otherUserId});
-
-      // Nettoyer le nom d'utilisateur en retirant les "null" et espaces supplémentaires
 
       const cleanedUsername = username 
         ? username.replace(/\bnull\b/gi, '').trim().replace(/\s+/g, ' ')
@@ -42,32 +40,42 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
       }
     };
     
-
     fetchUsername();
   }, [otherUserId]);
 
-  
-
+  // Charger le nombre de messages non lus
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      try {
+        const count = await getUnreadMessagesCount(item.id_conversation, userId);
+        setUnreadCount(count);
+      } catch (error) {
+        console.error("Error loading unread count:", error);
+        setUnreadCount(0);
+      }
+    };
+    
+    if (userId) {
+      loadUnreadCount();
+    }
+  }, [item.id_conversation, userId]);
 
   // Fonction pour formater le temps comme WhatsApp
-  const formatTime = (dateString: string) =>   {
+  const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60);
     
     if (diffInHours < 24) {
-      // Moins de 24h : afficher l'heure
       return date.toLocaleTimeString('fr-FR', { 
         hour: '2-digit', 
         minute: '2-digit',
         hour12: false 
       });
-    } else if (diffInHours < 168) { // 7 jours
-      // Cette semaine : afficher le jour
+    } else if (diffInHours < 168) {
       const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
       return days[date.getDay()];
     } else {
-      // Plus ancien : afficher la date
       return date.toLocaleDateString('fr-FR', { 
         day: '2-digit', 
         month: '2-digit',
@@ -81,16 +89,15 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
       const ms = await getLastMessage(item.id_conversation);
       console.log("Last message loaded:", ms);
       setLastMessage(ms);
-      
     } catch (error) {
       console.error("Error loading last message:", error);
       return '';
     } 
   }, [item.id_conversation]);
   
-  useEffect(()=> {
+  useEffect(() => {
     loadLastMessage();
-  }, [])
+  }, [loadLastMessage]);
 
   // Couleurs d'avatar aléatoires pour chaque utilisateur
   const getAvatarColor = (userId: string) => {
@@ -116,7 +123,6 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
           className="w-14 h-14 rounded-full bg-gray-300 items-center justify-center overflow-hidden"
           style={{ backgroundColor: getAvatarColor(otherUserId) }}
         >
-          {/* Avatar avec nom nettoyé */}
           <Image
             source={{ 
               uri: `${photoProfil !== '' ? photoProfil : `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUsername)}&background=${getAvatarColor(otherUserId).substring(1)}&color=fff&size=56&font-size=0.6&rounded=true&bold=true`}` 
@@ -124,7 +130,6 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
             className="w-full h-full"
             style={{ borderRadius: 28 }}
             onError={() => {
-              // Fallback en cas d'erreur de chargement de l'image
               console.warn("Avatar loading failed for:", otherUsername);
             }}
           />
@@ -133,7 +138,7 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
         {/* Indicateur en ligne*/}
         <View 
           className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"
-          style={{ display: 'none' }} // Masqué pour l'instant
+          style={{ display: 'none' }}
         />
       </View>
 
@@ -141,11 +146,14 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
       <View className="flex-1 justify-center">
         {/* Ligne supérieure : Nom + Heure */}
         <View className="flex-row items-center justify-between mb-1">
-          {/* Nom  */}
+          {/* Nom avec style conditionnel */}
           <Text 
             className="text-gray-900 font-medium text-base flex-1"
             numberOfLines={1}
-            style={{ fontSize: 16, fontWeight: '500' }}
+            style={{ 
+              fontSize: 16, 
+              fontWeight: unreadCount > 0 ? 'bold' : '500'
+            }}
           >
             {otherUsername}
           </Text>
@@ -153,7 +161,11 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
           {/* Heure de la dernière activité */}
           <Text 
             className="text-gray-500 text-xs ml-2"
-            style={{ fontSize: 12, color: '#8E8E93' }}
+            style={{ 
+              fontSize: 12, 
+              color: unreadCount > 0 ? '#25D366' : '#8E8E93',
+              fontWeight: unreadCount > 0 ? 'bold' : 'normal'
+            }}
           >
             {formatTime(item.derniere_activite)}
           </Text>
@@ -164,41 +176,36 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
           <Text 
             className="text-gray-600 text-sm flex-1"
             numberOfLines={1}
-            style={{ fontSize: 14, color: '#8E8E93' }}
+            style={{ 
+              fontSize: 14, 
+              color: unreadCount > 0 ? '#1F2937' : '#8E8E93',
+              fontWeight: unreadCount > 0 ? '600' : 'normal'
+            }}
           >
             {lastMesage} 
           </Text>
           
-          {/* Badge de messages non lus (optionnel) */}
-          {/* <View 
-            className="bg-green-500 rounded-full px-2 py-1 ml-2"
-            style={{ 
-              backgroundColor: '#25D366',
-              minWidth: 20,
-              height: 20,
-              justifyContent: 'center',
-              alignItems: 'center',
-              display: 'flex' // Masqué pour l'instant
-            }}
-          >
-            <Text className="text-white text-xs font-medium" style={{ fontSize: 12 }}>
-              3
-            </Text>
-          </View> */}
+          {/* Badge de messages non lus */}
+          {unreadCount > 0 && (
+            <View 
+              className="bg-green-500 rounded-full px-2 py-1 ml-2"
+              style={{ 
+                backgroundColor: '#25D366',
+                minWidth: 20,
+                height: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text className="text-white text-xs font-medium" style={{ fontSize: 12 }}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Text>
+            </View>
+          )}
         </View>
-      </View>
-
-      {/* Indicateur de message envoyé/reçu (optionnel) */}
-      <View className="ml-2" style={{ display: 'flex' }}>
-        {/* Double coche bleue pour les messages lus */}
-        {/* <View className="flex-row">
-          <Text style={{ color: '#34B7F1', fontSize: 16 }}>✓</Text>
-          <Text style={{ color: '#34B7F1', fontSize: 16, marginLeft: -8 }}>✓</Text>
-        </View> */}
       </View>
     </TouchableOpacity>
   );
 };
 
 export default RenderConversation;
-

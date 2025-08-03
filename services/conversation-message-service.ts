@@ -96,12 +96,12 @@ export async function getUsername({ id }: { id: string }): Promise<string> {
       .single();
 
     if (error) {
-      console.error(`❌ Supabase error in getUsername():`, error.message);
+      console.error(` Supabase error in getUsername():`, error.message);
       throw new Error(`Failed to get username: ${error.message}`);
     }
 
     if (!data) {
-      console.warn(`⚠️ No user found for id_utilisateur: ${id}`);
+      console.warn(` No user found for id_utilisateur: ${id}`);
       throw new Error('No user found.');
     }
 
@@ -121,12 +121,12 @@ export async function getUser({ id }: { id: string }): Promise<{username: string
       .single();
 
     if (error) {
-      console.error(`❌ Supabase error in getUsername():`, error.message);
+      console.error(` Supabase error in getUsername():`, error.message);
       throw new Error(`Failed to get username: ${error.message}`);
     }
 
     if (!data) {
-      console.warn(`⚠️ No user found for id_utilisateur: ${id}`);
+      console.warn(` No user found for id_utilisateur: ${id}`);
       throw new Error('No user found.');
     }
 
@@ -135,7 +135,7 @@ export async function getUser({ id }: { id: string }): Promise<{username: string
       photo_profil: `${data?.photo_profil || ""}` 
     };
   } catch (err) {
-    console.error('❌ getUsername failed:', err);
+    console.error(' getUsername failed:', err);
     throw err;
   }
 }
@@ -149,12 +149,12 @@ export async function getConversationById({ id_conversation }: { id_conversation
       .single();
 
     if (error) {
-      console.error(`❌ Supabase error in getConversationById():`, error.message);
+      console.error(` Supabase error in getConversationById():`, error.message);
       throw new Error(`Failed to get conversation: ${error.message}`);
     }
 
     if (!data) {
-      console.warn(`⚠️ No conversation found for id_conversation: ${id_conversation}`);
+      console.warn(`No conversation found for id_conversation: ${id_conversation}`);
       return null;
     }
 
@@ -166,7 +166,7 @@ export async function getConversationById({ id_conversation }: { id_conversation
       created_at: data.created_at,
     };
   } catch (err) {
-    console.error('❌ getConversationById failed:', err);
+    console.error(' getConversationById failed:', err);
     throw err;
   }
 }
@@ -333,7 +333,7 @@ export async function uploadFile(uri: string, fileName: string, contentType: str
 
       // Upload to Supabase storage
       const { data, error } = await supabase.storage
-        .from('pieces_jointes')
+        .from('pieces-jointes-envoyes')
         .upload(fileName, buffer, {
           contentType,
           upsert: true,
@@ -345,7 +345,7 @@ export async function uploadFile(uri: string, fileName: string, contentType: str
 
       // Get public URL
       const { data: publicUrlData } = supabase.storage
-        .from('pieces_jointes')
+        .from('pieces-jointes-envoyes')
         .getPublicUrl(fileName);
 
       if (!publicUrlData?.publicUrl) {
@@ -413,3 +413,51 @@ export async function sendMessage({
     throw error;
   }
 }
+
+// compte des messages non lus
+export const getUnreadMessagesCount = async (conversationId: number, userId: string): Promise<number> => {
+    try {
+        const { count, error } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('id_conversation', conversationId)
+            .eq('id_destinataire', userId)
+            .eq('lu', false);
+
+        if (error) {
+            console.error('Error getting unread messages count:', error);
+            return 0;
+        }
+
+        return count || 0;
+    } catch (error) {
+        console.error('Error in getUnreadMessagesCount:', error);
+        return 0;
+    }
+};
+
+// Fonction pour marquer les messages comme lus
+export const markMessagesAsRead = async (conversationId: number, userId: string): Promise<void> => {
+    //try {
+        // const { error } = await supabase
+        //     .from('messages')
+        //     .update({ lu: true })
+        //     .eq('id_conversation', conversationId)
+        //     .eq('id_destinataire', userId)
+        //     .eq('lu', false);
+
+    //     if (error) {
+    //         console.error('Error marking messages as read:', error);
+    //     }
+    // } catch (error) {
+    //     console.error('Error in markMessagesAsRead:', error);
+    // }
+};
+
+export const addReactionToMessage = async (messageId: string, emoji: string, userId: string) => {
+  // Logique Supabase pour ajouter une réaction
+};
+
+export const deleteMessageById = async (messageId: string) => {
+  // Logique Supabase pour supprimer un message
+};

@@ -1046,15 +1046,13 @@ const HomeScreen: React.FC = () => {
             <View style={styles.finalCtaButtons}>
               <TouchableOpacity
                 style={styles.finalCtaButtonPrimary}
-                onPress={() => router.replace('/(auth)/login')}>
+                onPress={() => router.navigate('/(auth)/register')}>
                 <Text style={styles.finalCtaButtonTextPrimary}>Créer un compte</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.finalCtaButtonSecondary}
-                onPress={() => {
-                  /* Afficher les landing pages */
-                }}>
-                <Text style={styles.finalCtaButtonTextSecondary}>En savoir plus</Text>
+                onPress={() => router.navigate('/(auth)/login')}>
+                <Text style={styles.finalCtaButtonTextSecondary}>Se connecter</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>

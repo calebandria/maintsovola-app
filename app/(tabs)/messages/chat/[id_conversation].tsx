@@ -6,20 +6,21 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
-  KeyboardAvoidingView,
   Platform,
   SafeAreaView,
   StyleSheet,
   Alert,
-  Keyboard,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Dimensions
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { getConversationById, getMessages, sendMessage, subscribeToMessages, uploadFile } from '~/services/conversation-message-service';
+import { getConversationById, getMessages, sendMessage, subscribeToMessages, uploadFile, getUser } from '~/services/conversation-message-service';
 
 import { Conversation, Message, Utilisateur } from '~/type/messageInterface';
 import { useAuth } from '~/contexts/AuthContext';
-import { LucideArrowBigLeft } from 'lucide-react-native';
+import { LucideArrowLeft, LucidePhone, LucideVideo, LucideMoreVertical, LucideSend } from 'lucide-react-native';
 import { supabase } from '~/lib/data';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,6 +39,49 @@ const ChatScreen = () => {
   const [convValid, setConvValid] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  
+  // États pour les infos de l'autre utilisateur
+  const [otherUser, setOtherUser] = useState<{
+    nom: string;
+    photoProfil?: string;
+    isOnline?: boolean;
+  }>({
+    nom: 'Utilisateur',
+    photoProfil: undefined,
+    isOnline: false
+  });
+
+  //gestion clavier
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      (event) => {
+        setKeyboardHeight(event.endCoordinates.height);
+      }
+    );
+
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
+
+
+  // Calcul de l'offset pour KeyboardAvoidingView
+  // Header height (approximatif) + safe area top + marge de sécurité
+  const keyboardVerticalOffset = Platform.OS === 'ios' ? insets.top + 60 : 150;
 
   const fetchMessages = useCallback(async () => {
     if (!parsedConvId || isNaN(parsedConvId)) {
@@ -46,7 +90,12 @@ const ChatScreen = () => {
     }
     try {
       const fetched = await getMessages({ id_conversation: parsedConvId });
-      setMessages(fetched);
+      //setMessages(fetched);
+      // trier par date
+      const sortedMessages = fetched.sort((a, b) => 
+        new Date(a.date_envoi).getTime() - new Date(b.date_envoi).getTime()
+      );
+      setMessages(sortedMessages);
     } catch (err) {
       console.error('Erreur chargement messages:', err);
       setError('Impossible de charger les messages. Veuillez réessayer.');
@@ -55,7 +104,7 @@ const ChatScreen = () => {
 
   useEffect(() => {
     if (!parsedConvId || !user || isNaN(parsedConvId)) {
-      console.warn("❌ Invalid conversation ID or user:", id_conversation, user);
+      console.warn("Invalid conversation ID or user:", id_conversation, user);
       setConvValid(false);
       return;
     }
@@ -71,10 +120,21 @@ const ChatScreen = () => {
           return;
         }
 
-        const otherId =
-          data.id_utilisateur1 === user.id ? data.id_utilisateur2 : data.id_utilisateur1;
-
+        const otherId = data.id_utilisateur1 === user.id ? data.id_utilisateur2 : data.id_utilisateur1;
         setReceiverId(otherId);
+
+        // Récupérer les infos de l'autre utilisateur
+        const { username, photo_profil } = await getUser({ id: otherId });
+        const cleanedUsername = username 
+          ? username.replace(/\bnull\b/gi, '').trim().replace(/\s+/g, ' ')
+          : 'Utilisateur';
+        
+        setOtherUser({
+          nom: cleanedUsername || 'Utilisateur',
+          photoProfil: photo_profil,
+          isOnline: Math.random() > 0.5 // Simulation statut en ligne (à remplacer par vraie logique)
+        });
+
       } catch (err) {
         console.error('Erreur identification destinataire:', err);
         setConvValid(false);
@@ -101,6 +161,13 @@ const ChatScreen = () => {
       supabase.removeChannel(subscription);
     };
   }, [parsedConvId]);
+
+  // Couleurs d'avatar aléatoires
+  const getAvatarColor = (userId: string) => {
+    const colors = ['#25D366', '#34B7F1', '#FF6B6B', '#4ECDC4', '#9B59B6', '#F39C12', '#E74C3C', '#27AE60'];
+    const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+    return colors[index];
+  };
 
   const handleFilePick = async () => {
     try {
@@ -159,7 +226,7 @@ const ChatScreen = () => {
               return await uploadFile(file.uri, fileName, file.mimeType || 'application/octet-stream');
             } catch (uploadErr) {
               console.error(`Failed to upload file ${file.name}:`, uploadErr);
-              return ''; // Skip failed uploads
+              return '';
             }
           })
         );
@@ -178,14 +245,13 @@ const ChatScreen = () => {
       setMessages((prev) => prev.filter((msg) => msg.id_message !== tempMessage.id_message));
     } catch (err: any) {
       console.error('Erreur envoi message:', err);
-      let errorMessage = 'Erreur lors de l’envoi du message. Veuillez vérifier votre connexion et réessayer.';
+      let errorMessage = 'Erreur lors de l\'envoi du message. Veuillez vérifier votre connexion et réessayer.';
       if (err.message.includes('Network request failed')) {
         errorMessage = 'Problème de connexion réseau. Veuillez vérifier votre connexion Internet.';
       } else if (err.message.includes('Failed to upload file')) {
-        errorMessage = 'Échec de l’envoi des fichiers joints. Le message texte a été envoyé.';
+        errorMessage = 'Échec de l\'envoi des fichiers joints. Le message texte a été envoyé.';
       }
       setError(errorMessage);
-      // If files failed but text exists, attempt to send text-only message
       if (inputToSend) {
         try {
           await sendMessage({
@@ -203,29 +269,92 @@ const ChatScreen = () => {
     }
   };
 
-  useEffect(() => {
-    const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    });
+  const handleLongPress = (message: Message, event: any) => {
+    const { pageX, pageY } = event.nativeEvent;
+    setSelectedMessage(message);
+    setMenuPosition({ x: pageX, y: pageY });
+    setMenuVisible(true);
+  };
 
-    return () => {
-      keyboardDidShow.remove();
-    };
-  }, []);
+  const addReaction = async (emoji: string) => {
+    if (!selectedMessage) return;
+    
+    try {
+      // Appel à votre service pour ajouter la réaction
+      // await addReactionToMessage(selectedMessage.id_message, emoji, user.id);
+      
+      // Mise à jour locale temporaire
+      setMessages(prev => prev.map(msg => 
+        msg.id_message === selectedMessage.id_message 
+          ? { 
+              ...msg, 
+              reactions: [
+                ...(msg.reactions || []),
+                { emoji, user_id: user?.id || '', user_name: user?.email || '' }
+              ]
+            }
+          : msg
+      ));
+      
+      setMenuVisible(false);
+      setSelectedMessage(null);
+    } catch (error) {
+      console.error('Erreur ajout réaction:', error);
+    }
+  };
+
+  const deleteMessage = async () => {
+    if (!selectedMessage) return;
+    
+    Alert.alert(
+      'Supprimer le message',
+      'Êtes-vous sûr de vouloir supprimer ce message ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Appel à votre service pour supprimer
+              // await deleteMessageById(selectedMessage.id_message);
+              
+              // Suppression locale temporaire
+              setMessages(prev => prev.filter(msg => msg.id_message !== selectedMessage.id_message));
+              
+              setMenuVisible(false);
+              setSelectedMessage(null);
+            } catch (error) {
+              console.error('Erreur suppression:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isCurrentUser = item.id_expediteur === user?.id;
 
     return (
-      <View style={[styles.messageContainer, { justifyContent: isCurrentUser ? 'flex-end' : 'flex-start' }]}>
+      <View style={[
+        styles.messageContainer, 
+        // { justifyContent: isCurrentUser ? 'flex-end' : 'flex-start' },
+        { alignItems: isCurrentUser ? 'flex-end' : 'flex-start'}
+        
+        ]}>
         <View
           style={[
             styles.messageBubble,
-            { backgroundColor: isCurrentUser ? '#25D366' : '#F0F0F0' },
+            { 
+              backgroundColor: isCurrentUser ? '#DCF8C6' : 'white',
+              borderTopRightRadius: isCurrentUser ? 8 : 18,
+              borderTopLeftRadius: isCurrentUser ? 18 : 8,
+            },
           ]}
         >
           {item.contenu && (
-            <Text style={[styles.messageText, { color: isCurrentUser ? 'white' : '#000' }]}>
+            <Text style={[styles.messageText, { color: isCurrentUser ? '#000' : '#000' }]}>
               {item.contenu}
             </Text>
           )}
@@ -239,12 +368,12 @@ const ChatScreen = () => {
                     {isImage ? (
                       <Image source={{ uri }} style={styles.attachmentImage} />
                     ) : isAudio ? (
-                      <Text style={[styles.attachmentText, { color: isCurrentUser ? 'white' : '#000' }]}>
-                        Audio file
+                      <Text style={[styles.attachmentText, { color: '#000' }]}>
+                        🎵 Fichier audio
                       </Text>
                     ) : (
-                      <Text style={[styles.attachmentText, { color: isCurrentUser ? 'white' : '#000' }]}>
-                        File: {uri.split('/').pop()}
+                      <Text style={[styles.attachmentText, { color: '#000' }]}>
+                        📄 {uri.split('/').pop()}
                       </Text>
                     )}
                   </View>
@@ -252,8 +381,20 @@ const ChatScreen = () => {
               })}
             </View>
           )}
+
+          {/* Affichage des réactions */}
+          {item.reactions && item.reactions.length > 0 && (
+            <View style={styles.reactionsContainer}>
+              {item.reactions.map((reaction, index) => (
+                <View key={index} style={styles.reactionBubble}>
+                  <Text style={styles.reactionEmoji}>{reaction.emoji}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           <View style={styles.messageFooter}>
-            <Text style={[styles.messageTime, { color: isCurrentUser ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
+            <Text style={[styles.messageTime, { color: '#8E8E93' }]}>
               {new Date(item.date_envoi).toLocaleTimeString('fr-FR', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -261,11 +402,12 @@ const ChatScreen = () => {
               })}
             </Text>
             {isCurrentUser && (
-              <Text style={styles.messageStatus}>✓✓</Text>
+              <Text style={[styles.messageStatus, { color: '#4FC3F7' }]}>✓✓</Text>
             )}
           </View>
         </View>
       </View>
+      
     );
   };
 
@@ -292,30 +434,62 @@ const ChatScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
+      {/* Header WhatsApp Style */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <LucideArrowBigLeft color="white" size={24} />
+          <LucideArrowLeft color="white" size={24} />
         </TouchableOpacity>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Discussion</Text>
-          <Text style={styles.headerSubtitle}>Conversation #{parsedConvId}</Text>
+        
+        {/* Avatar de l'utilisateur */}
+        <View style={styles.avatarContainer}>
+          <Image
+            source={{ 
+              uri: otherUser.photoProfil || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.nom)}&background=${getAvatarColor(receiverId).substring(1)}&color=fff&size=40&font-size=0.6&rounded=true&bold=true`
+            }}
+            style={styles.avatar}
+          />
+          {otherUser.isOnline && <View style={styles.onlineIndicator} />}
+        </View>
+
+        {/* Infos utilisateur */}
+        <TouchableOpacity style={styles.headerTextContainer} activeOpacity={0.7}>
+          <Text style={styles.headerTitle}>{otherUser.nom}</Text>
+        </TouchableOpacity>
+
+        {/* Boutons d'action */}
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.actionButton}>
+            <LucidePhone color="white" size={22} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+            <LucideMoreVertical color="white" size={22} />
+          </TouchableOpacity>
         </View>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={insets.top + 60}
-      >
+      {/* <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 60 : 0}
+        style={styles.container}
+      > */}
+      <View style={[
+        styles.container,
+        Platform.OS === 'android' && keyboardHeight > 0 && { 
+          marginBottom: keyboardHeight - 330 
+        }
+      ]}>
         {/* Messages List */}
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={(item) => item.id_message}
+          keyExtractor={(item: Message) => item.id_message}
           renderItem={renderMessage}
           style={styles.messageList}
-          contentContainerStyle={styles.messageListContent}
+          contentContainerStyle={[
+            styles.messageListContent,
+            // Ajustement dynamique selon le clavier
+            { paddingBottom: keyboardHeight > 0 ? 10 : 20 }
+          ]}
           showsVerticalScrollIndicator={false}
           removeClippedSubviews={false}
           initialNumToRender={15}
@@ -329,105 +503,302 @@ const ChatScreen = () => {
           }}
         />
 
-        {/* Input Area */}
-        <View style={[styles.inputContainer, { paddingBottom: insets.bottom }]}>
+        {/* Affichage des fichiers sélectionnés */}
+        {selectedFiles.length > 0 && (
+          <View style={styles.selectedFilesContainer}>
+            <Text style={styles.selectedFilesText}>
+              {selectedFiles.length} fichier(s) sélectionné(s)
+            </Text>
+            <TouchableOpacity onPress={() => setSelectedFiles([])}>
+              <Text style={styles.clearFilesText}>Effacer</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Input Area avec gestion du clavier */}
+        <View style={[
+          styles.inputContainer,
+          // Pas de padding supplémentaire sur Android quand le clavier est fermé
+          Platform.OS === 'android' && keyboardHeight === 0 && { paddingBottom: 8 }
+        ]}>
           <View style={styles.textInputContainer}>
             <TextInput
               value={input}
               onChangeText={setInput}
-              placeholder="Écrire un message..."
+              placeholder="Message"
               placeholderTextColor="#8E8E93"
               multiline
               style={styles.textInput}
               maxLength={1000}
             />
+            <TouchableOpacity onPress={handleFilePick} style={styles.attachmentButton}>
+              <Text style={styles.attachmentButtonText}>📎</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={handleFilePick} style={styles.attachmentButton}>
-            <Text style={styles.attachmentButtonText}>📎</Text>
-          </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSend}
             disabled={!input.trim() && selectedFiles.length === 0}
-            style={[styles.sendButton, { backgroundColor: input.trim() || selectedFiles.length > 0 ? '#25D366' : '#BDC3C7' }]}
+            style={[
+              styles.sendButton, 
+              { 
+                backgroundColor: input.trim() || selectedFiles.length > 0 ? '#25D366' : '#BDC3C7',
+                transform: input.trim() || selectedFiles.length > 0 ? [{ scale: 1 }] : [{ scale: 0.95 }]
+              }
+            ]}
           >
-            <Text style={styles.sendButtonText}>↗</Text>
+            <LucideSend color="white" size={20} />
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+      {/* </KeyboardAvoidingView> */}
+      </View>
+
+      {menuVisible && (
+      <>
+        {/* Overlay pour fermer le menu */}
+        <TouchableOpacity 
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => {
+            setMenuVisible(false);
+            setSelectedMessage(null);
+          }}
+        />
+        
+        {/* Menu contextuel */}
+        <View style={[
+          styles.contextMenu,
+          {
+            left: Math.min(menuPosition.x - 100, Dimensions.get('window').width - 220),
+            top: Math.max(menuPosition.y - 100, 100),
+          }
+        ]}>
+          {/* Réactions rapides */}
+          <View style={styles.reactionsRow}>
+            {['❤️', '😂', '😮', '😢', '😡', '👍'].map((emoji) => (
+              <TouchableOpacity
+                key={emoji}
+                style={styles.reactionButton}
+                onPress={() => addReaction(emoji)}
+              >
+                <Text style={styles.reactionButtonText}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          
+          {/* Actions */}
+          <View style={styles.menuActions}>
+            {selectedMessage?.id_expediteur === user?.id && (
+              <TouchableOpacity 
+                style={styles.menuActionButton}
+                onPress={deleteMessage}
+              >
+                <Text style={[styles.menuActionText, { color: '#FF3B30' }]}>
+                  🗑️ Supprimer
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            <TouchableOpacity 
+              style={styles.menuActionButton}
+              onPress={() => {
+                // Logique pour répondre au message
+                setMenuVisible(false);
+                setSelectedMessage(null);
+              }}
+            >
+              <Text style={styles.menuActionText}>↩️ Répondre</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </>
+    )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F6F6F6' },
+  safeArea: { 
+    flex: 1, 
+    backgroundColor: '#ECE5DD' // Couleur de fond WhatsApp
+  },
+  container: {
+    flex: 1,
+  },
   header: {
-    backgroundColor: '#25D366',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: '#075E54', // Vert WhatsApp plus foncé
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 4,
   },
-  backButton: { marginRight: 16, padding: 8, marginLeft: -8 },
-  headerTextContainer: { flex: 1 },
-  headerTitle: { color: 'white', fontSize: 18, fontWeight: '600' },
-  headerSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 14 },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { color: '#8E8E93', fontSize: 18 },
-  keyboardAvoidingView: { flex: 1 },
-  messageList: { flex: 1, backgroundColor: '#F6F6F6' },
-  messageListContent: { paddingVertical: 8, flexGrow: 1, justifyContent: 'flex-end' },
-  messageContainer: { flexDirection: 'row', marginVertical: 2, marginHorizontal: 16 },
+  backButton: { 
+    marginRight: 8, 
+    padding: 8, 
+    marginLeft: -4 
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#25D366',
+    borderWidth: 2,
+    borderColor: '#075E54',
+  },
+  headerTextContainer: { 
+    flex: 1,
+    justifyContent: 'center',
+  },
+  headerTitle: { 
+    color: 'white', 
+    fontSize: 18, 
+    fontWeight: '600',
+    marginBottom: 1,
+  },
+  headerSubtitle: { 
+    color: 'rgba(255,255,255,0.8)', 
+    fontSize: 13,
+    fontWeight: '400',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionButton: {
+    padding: 8,
+    marginLeft: 4,
+  },
+  errorContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  errorText: { 
+    color: '#8E8E93', 
+    fontSize: 18 
+  },
+  messageList: { 
+    flex: 1,
+    backgroundColor: '#ECE5DD',
+  },
+  messageListContent: { 
+    paddingVertical: 12, 
+    flexGrow: 1, 
+    justifyContent: 'flex-end',
+    paddingBottom: 20,
+  },
+  messageContainer: { 
+    flexDirection: 'row', 
+    marginVertical: 1, 
+    marginHorizontal: 8 
+  },
   messageBubble: {
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    maxWidth: '80%',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    maxWidth: '85%',
     minWidth: 60,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 1,
+    shadowRadius: 2,
     elevation: 1,
   },
-  messageText: { fontSize: 16, lineHeight: 20 },
-  attachmentContainer: { marginTop: 8 },
-  attachmentItem: { marginBottom: 8 },
-  attachmentImage: { width: 200, height: 200, borderRadius: 8 },
-  attachmentText: { fontSize: 14, marginTop: 4 },
-  messageFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 4 },
-  messageTime: { fontSize: 12, marginRight: 4 },
-  messageStatus: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
+  messageText: { 
+    fontSize: 16, 
+    lineHeight: 22 
+  },
+  attachmentContainer: { 
+    marginTop: 6 
+  },
+  attachmentItem: { 
+    marginBottom: 6 
+  },
+  attachmentImage: { 
+    width: 200, 
+    height: 200, 
+    borderRadius: 8 
+  },
+  attachmentText: { 
+    fontSize: 14, 
+    marginTop: 2 
+  },
+  messageFooter: { 
+    flexDirection: 'row', 
+    justifyContent: 'flex-end', 
+    alignItems: 'center', 
+    marginTop: 4 
+  },
+  messageTime: { 
+    fontSize: 11, 
+    marginRight: 4 
+  },
+  messageStatus: { 
+    fontSize: 12 
+  },
+  selectedFilesContainer: {
+    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 0.5,
+    borderTopColor: '#E5E5E5',
+  },
+  selectedFilesText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  clearFilesText: {
+    fontSize: 14,
+    color: '#25D366',
+    fontWeight: '600',
+  },
   inputContainer: {
     backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'flex-end',
     borderTopWidth: 0.5,
     borderTopColor: '#E5E5E5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
   },
   textInputContainer: {
     flex: 1,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: 'white',
     borderRadius: 25,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
-    maxHeight: 100,
+    maxHeight: 120,
     minHeight: 44,
     justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   textInput: {
+    flex: 1,
     fontSize: 16,
     lineHeight: 20,
     color: '#000',
@@ -435,21 +806,90 @@ const styles = StyleSheet.create({
     minHeight: 20,
     textAlignVertical: 'center',
   },
-  attachmentButton: { marginRight: 8, padding: 8 },
-  attachmentButtonText: { fontSize: 24 },
+  attachmentButton: { 
+    padding: 4,
+    marginLeft: 8,
+  },
+  attachmentButtonText: { 
+    fontSize: 20 
+  },
   sendButton: {
     borderRadius: 25,
     width: 44,
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 0,
   },
   sendButtonText: {
-    color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
-    transform: [{ rotate: '-45deg' }],
+  },
+  reactionsContainer: {
+    flexDirection: 'row',
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
+  reactionBubble: {
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginRight: 4,
+    marginTop: 2,
+  },
+  reactionEmoji: {
+    fontSize: 14,
+  },
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    zIndex: 999,
+  },
+  contextMenu: {
+    position: 'absolute',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+    minWidth: 200,
+  },
+  reactionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  reactionButton: {
+    padding: 8,
+    borderRadius: 20,
+  },
+  reactionButtonText: {
+    fontSize: 20,
+  },
+  menuActions: {
+    paddingTop: 8,
+  },
+  menuActionButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  menuActionText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '500',
   },
 });
 
 export default ChatScreen;
+

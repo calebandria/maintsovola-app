@@ -13,9 +13,9 @@ import {
 import { Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { AgriculturalProject } from '~/hooks/use-project-data';
 import { useProjectInteractions } from '~/hooks/use-project-interactions';
-import CommentsSection from './CommentsSection';
-import FinancialDetailsModal from './FinancialDetailsModal';
-import InvestmentModal from './InvestmentModal';
+import CommentsSection from '../CommentsSection';
+import FinancialDetailsModal from '../FinancialDetailsModal';
+import InvestmentModal from '../InvestmentModal';
 import { useAuth } from '~/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import GaleryDetailModal from './GaleryDetailModal';

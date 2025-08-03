@@ -4,6 +4,7 @@ export interface Conversation {
     id_utilisateur2: string;
     derniere_activite: string;
     created_at: string;
+    messages_non_lus?: number;
 }
 
 export interface Message {
@@ -17,6 +18,11 @@ export interface Message {
     created_at: string;
     modified_at: string;
     pieces_jointes?: string[];
+    reactions?: Array<{
+        emoji: string;
+        user_id: string;
+        user_name: string;
+    }>;
      // Optional field for attachments
 }
 

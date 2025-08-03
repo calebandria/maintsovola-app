@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import SubNavTabs from './SubNavTabs';
+import SubNavTabs from '../SubNavTabs';
 import { getProjectById } from '~/services/feeds.service';
 
 export default function GaleryDetailModal({
@@ -70,7 +70,6 @@ export default function GaleryDetailModal({
     // Si des photos sont passées en props, les utiliser directement
     if (propPhotos && propPhotos.length > 0) {
       setPhotos(propPhotos);
-      console.log('Using photos from props:', propPhotos.length, propPhotos);
       return;
     }
 
@@ -146,11 +145,6 @@ export default function GaleryDetailModal({
             <View className="mt-4">
               {photos.length > 0 ? (
                 <View>
-                  {/* Debug info */}
-                  <Text className="mb-2 text-xs text-gray-400">
-                    Debug: {photos.length} photos trouvées
-                  </Text>
-
                   {/* Carrousel de photos */}
                   <View style={{ height: 320 }}>
                     <FlatList
