@@ -1,4 +1,4 @@
-// CreateProjectModal.tsx – version 100 % fonctionnelle
+// CreateProjectModal.tsx – version avec gestion multiple d'images
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -12,13 +12,16 @@ import {
   BackHandler,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import * as ImagePicker from 'expo-image-picker';
+import { launchImageLibraryAsync } from 'expo-image-picker';
 import { supabase } from '@/utils/supabase';
-import { v4 as uuidv4 } from 'uuid';
+// Remplacer uuid par une fonction simple
+const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 import { CultureData } from '@/types/cultureData';
 import { ProjectData } from '@/type/projectInterface';
 import { TerrainData } from '@/types/terrainData';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { MapPlus } from 'lucide-react-native';
+import { router } from 'expo-router';
 
 function daysBetween(dateA?: string, dateB?: string): number {
   if (!dateA || !dateB) return 0;
@@ -38,6 +41,7 @@ interface ImageData {
   uri: string;
   url: string;
   id: string;
+  isUploaded: boolean; // Nouveau champ pour tracker si uploadé
 }
 
 const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
@@ -57,9 +61,9 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
   const [cultures, setCultures] = useState<CultureData[]>([]);
   const [selectedTerrain, setSelectedTerrain] = useState<TerrainData | null>(null);
   const [selectedCultures, setSelectedCultures] = useState<number[]>([]);
-  const [image, setImage] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState('');
+  const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -74,7 +78,7 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
 
       const assignedIds = (assigned ?? [])
         .map(p => p.id_terrain)
-        .filter(id => typeof id === 'number'); // <— sécurise le type
+        .filter(id => typeof id === 'number');
 
       /* 2. Construire la clause WHERE */
       let query = supabase.from('terrain').select('*');
@@ -89,7 +93,6 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
         if (assignedIds.length) {
           query = query.not('id', 'in', `(${assignedIds.join(',')})`);
         }
-        /* si aucun terrain n’est encore pris on ne filtre rien */
       }
 
       const { data: terrainData } = await query;
@@ -102,6 +105,21 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
         const ids = project.projet_culture.map(pc => pc.id_culture);
         setSelectedCultures(ids);
       }
+
+      // Charger les images existantes si en mode modification
+      if (project?.photos) {
+        const existingImages = project.photos
+          .split(',')
+          .filter(url => url.trim() !== '')
+          .map((url, index) => ({
+            uri: url.trim(),
+            url: url.trim(),
+            id: `existing-${index}`,
+            isUploaded: true
+          }));
+        setImages(existingImages);
+      }
+
       setLoading(false);
     };
     fetchAll();
@@ -113,26 +131,48 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
     );
 
   const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-    });
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setImage(uri);
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const fileName = `projects/${uuidv4()}`;
-      const { data, error } = await supabase.storage
-        .from('project-images')
-        .upload(fileName, blob);
-      if (!error) {
-        const { data: publicUrl } = supabase.storage
-          .from('project-images')
-          .getPublicUrl(fileName);
-        setImageUrl(publicUrl.publicUrl);
+    try {
+      const result = await launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+        allowsMultipleSelection: false,
+      });
+
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        const tempId = generateId();
+        
+        // Ajouter l'image localement SANS upload immédiat
+        const tempImage: ImageData = {
+          uri: uri,
+          url: '',
+          id: tempId,
+          isUploaded: false
+        };
+        
+        setImages(prev => [...prev, tempImage]);
       }
+    } catch (error) {
+      Alert.alert('Erreur', 'Erreur lors de la sélection de l\'image');
     }
+  };
+
+  const handleRemoveImage = (imageId: string) => {
+    Alert.alert(
+      'Supprimer l\'image',
+      'Voulez-vous vraiment supprimer cette image ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => {
+            setImages(prev => prev.filter(img => img.id !== imageId));
+          }
+        }
+      ]
+    );
   };
 
   const ownerFullName = project
@@ -188,37 +228,86 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
     );
   };
 
+  const uploadImages = async (imagesToUpload: ImageData[]) => {
+    const uploadedUrls: string[] = [];
+    
+    for (const image of imagesToUpload) {
+      if (image.isUploaded) {
+        // Image déjà uploadée (mode modification)
+        uploadedUrls.push(image.url);
+      } else {
+        // Nouvelle image à uploader
+        try {
+          const fileName = `project-photos/project-${Date.now()}-${generateId()}.jpg`;
+          
+          const formData = new FormData();
+          formData.append('file', {
+            uri: image.uri,
+            type: 'image/jpeg',
+            name: fileName,
+          } as any);
+
+          const { data, error } = await supabase.storage
+            .from('project-photos')
+            .upload(fileName, formData);
+
+          if (!error) {
+            const { data: publicUrl } = supabase.storage
+              .from('project-photos')
+              .getPublicUrl(fileName);
+            uploadedUrls.push(publicUrl.publicUrl);
+          } else {
+            throw new Error(error.message);
+          }
+        } catch (uploadError) {
+          throw uploadError;
+        }
+      }
+    }
+    
+    return uploadedUrls;
+  };
+
   const handleSubmit = async () => {
     const culturesToSend = cultures.filter(c => selectedCultures.includes(c.id_culture));
-
-    const payload = {
-      titre,
-      description,
-      id_terrain: selectedTerrain?.id_terrain,
-      cultures: culturesToSend,
-      photos: imageUrl,
-      duree_totale: summary.dureeTotale,
-      cout_total: summary.coutTotal,
-    };
-
+    
     setLoading(true);
-    let error;
-    if (project?.id_projet) {
-      ({ error } = await supabase
-        .from('projet')
-        .update(payload)
-        .eq('id_projet', project.id_projet));
-    } else {
-      ({ error } = await supabase.from('projet').insert([payload]));
-    }
-    setLoading(false);
+    
+    try {
+      // Upload toutes les nouvelles images
+      const imageUrls = await uploadImages(images);
+      
+      const payload = {
+        titre,
+        description,
+        id_terrain: selectedTerrain?.id_terrain,
+        cultures: culturesToSend,
+        photos: imageUrls.join(','),
+        duree_totale: summary.dureeTotale,
+        cout_total: summary.coutTotal,
+      };
 
-    if (!error) {
-      Alert.alert('Succès', project ? 'Projet modifié' : 'Projet créé');
-      onClose();
-    } else {
-      Alert.alert('Erreur', 'Impossible d’enregistrer');
+      let error;
+      if (project?.id_projet) {
+        ({ error } = await supabase
+          .from('projet')
+          .update(payload)
+          .eq('id_projet', project.id_projet));
+      } else {
+        ({ error } = await supabase.from('projet').insert([payload]));
+      }
+
+      if (!error) {
+        Alert.alert('Succès', project ? 'Projet modifié' : 'Projet créé');
+        onClose();
+      } else {
+        Alert.alert('Erreur', 'Impossible d\'enregistrer');
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Erreur lors de l\'upload des images');
     }
+    
+    setLoading(false);
   };
 
   if (loading) {
@@ -274,7 +363,19 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
             </Picker>
           </View>
         ) : (
-          <Text className="text-gray-500">Aucun terrain disponible</Text>
+          <View className='flex flex-row w-full justify-between items-center'>
+            <Text className="text-gray-500">Aucun terrain disponible</Text>
+            <TouchableOpacity
+              className='p-2 flex flex-row items-center gap-1 bg-zinc-50 rounded-full shadow active:bg-white active:shadow-none'
+              activeOpacity={0.85}
+              onPress={()=> {router.replace("/(tabs)/terrain")}}
+            >
+              <Text className='text-blue-400 font-semibold'>terrain</Text>
+              <MapPlus color="#45ba50" height={20}></MapPlus>
+            </TouchableOpacity>
+            
+          </View>
+          
         )}
       </View>
 
@@ -292,23 +393,67 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
       ))}
       </View>
 
-      {/* Image */}
+      {/* Images */}
       <View className="mb-4">
-        <Text className="text-lg font-semibold text-gray-700 mb-2">Image</Text>
+        <Text className="text-lg font-semibold text-gray-700 mb-2">
+          Images ({images.length})
+        </Text>
+        
+        {/* Bouton d'ajout d'image */}
         <TouchableOpacity
           onPress={handlePickImage}
-          className="bg-green-500 p-3 rounded-lg"
+          className="bg-green-500 p-3 rounded-lg mb-3"
         >
-          <Text className="text-white text-center font-semibold">
-            Choisir une image
-          </Text>
+          <View className="flex-row items-center justify-center">
+            <Text className="text-white text-center font-semibold">
+              Choisir une image
+            </Text>
+          </View>
         </TouchableOpacity>
-        {imageUrl ? (
-          <Image
-            source={{ uri: imageUrl }}
-            className="w-full h-48 mt-2 rounded-lg"
-          />
-        ) : null}
+
+        {/* Grille de prévisualisation des images */}
+        {images.length > 0 && (
+          <View className="flex-row flex-wrap -mx-1">
+            {images.map((image, index) => (
+              <View key={image.id} className="w-1/3 px-1 mb-2">
+                <View className="relative">
+                  <Image
+                    source={{ uri: image.uri }}
+                    className="w-full h-24 rounded-lg bg-gray-200"
+                    resizeMode="cover"
+                  />
+                  
+                  {/* Indicateur pour les nouvelles images */}
+                  {!image.isUploaded && (
+                    <View className="absolute inset-0 bg-blue/20 rounded-lg flex items-center justify-center">
+                      <Text className="text-white text-xs bg-blue-500 px-2 py-1 rounded">NOUVEAU</Text>
+                    </View>
+                  )}
+                  
+                  {/* Bouton de suppression */}
+                  <TouchableOpacity
+                    onPress={() => handleRemoveImage(image.id)}
+                    className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center"
+                  >
+                    <Text className="text-white text-xs font-bold">×</Text>
+                  </TouchableOpacity>
+                  
+                  {/* Numéro de l'image */}
+                  <View className="absolute bottom-1 left-1 bg-black/70 rounded px-2 py-1">
+                    <Text className="text-white text-xs">{index + 1}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+        
+        {/* Message si aucune image */}
+        {images.length === 0 && (
+          <Text className="text-gray-500 text-center py-4 italic">
+            Aucune image ajoutée
+          </Text>
+        )}
       </View>
 
       {/* Boutons */}

@@ -158,7 +158,7 @@ export interface ProjectDetails {
   commune?: {
     nom_commune: string;
   };
-  projet_culture: Array<{
+  projet_culture: {
     id_projet_culture: number;
     id_culture: number;
     cout_exploitation_previsionnel: number;
@@ -169,7 +169,7 @@ export interface ProjectDetails {
       prix_tonne: number;
       rendement_ha: number;
     };
-  }>;
+  }[];
 }
 
 export interface ProjectMetrics {
@@ -416,7 +416,7 @@ export const fetchJalonsAgricolesByCulture = async (cultureId: number): Promise<
 
 export const startProjectProduction = async (
   projectId: number, 
-  projectCultures: Array<{ id_culture: number }>
+  projectCultures: { id_culture: number }[]
 ): Promise<void> => {
   const startDate = new Date().toISOString().split('T')[0];
   
