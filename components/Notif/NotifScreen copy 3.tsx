@@ -9,14 +9,11 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
-  Linking,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useAuth } from '~/contexts/AuthContext';
 import { supabase } from '~/lib/data';
 import { getUsers } from '~/services/conversation-message-service';
 import { Utilisateur } from '~/type/messageInterface';
-// import { getNotificationWebSocket, cleanupNotificationWebSocket } from '~/services/notificationWebSocketService';
 
 interface NotificationItem {
   id: number;
@@ -24,9 +21,9 @@ interface NotificationItem {
   user: string;
   avatar: string;
   action: string;
-  actionLink?: string; // Nouveau champ pour le lien de navigation
+  actionLink?: string;
   time: string;
-  dateTime: string;
+  dateTime: string; // Nouvelle propriété pour la date complète
   isRead: boolean;
   content?: string;
   senderId?: string;
@@ -34,7 +31,6 @@ interface NotificationItem {
 
 const NotifScreen: React.FC = () => {
   const { user } = useAuth();
-  const router = useRouter();
   const userId: string = user?.id || '';
   console.log("les users data:", userId);
   
@@ -46,40 +42,10 @@ const NotifScreen: React.FC = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMoreNotifications, setHasMoreNotifications] = useState(true);
-  // const [wsService, setWsService] = useState<any>(null);
-  
+   // const [wsService, setWsService] = useState<any>(null);
   const NOTIFICATIONS_PER_PAGE = 9;
 
-  // Fonction pour gérer la navigation vers le lien
-  const handleNotificationPress = async (notification: NotificationItem) => {
-    // Marquer comme lu
-    await markAsRead(notification.id);
-    
-    // Si il y a un lien d'action, naviguer
-    if (notification.actionLink) {
-      try {
-        // Vérifier si c'est un lien externe (http/https) ou interne
-        if (notification.actionLink.startsWith('http')) {
-          // Lien externe - ouvrir dans le navigateur
-          const canOpen = await Linking.canOpenURL(notification.actionLink);
-          if (canOpen) {
-            await Linking.openURL(notification.actionLink);
-          } else {
-            Alert.alert('Erreur', 'Impossible d\'ouvrir ce lien');
-          }
-        } else {
-          // Lien interne - navigation dans l'app avec Expo Router
-          console.log('Navigation interne vers:', notification.actionLink);
-        //  router.replace(notification.actionLink);
-        }
-      } catch (error) {
-        console.error('Erreur lors de la navigation:', error);
-        Alert.alert('Erreur', 'Impossible de naviguer vers ce lien');
-      }
-    }
-  };
-
-  /*
+   /*
   // === WEBSOCKET SERVICE INTEGRATION (COMMENTED FOR NOW) ===
   // Décommentez cette section quand vous aurez l'URL WebSocket
   
@@ -112,6 +78,8 @@ const NotifScreen: React.FC = () => {
   
   // === FIN WEBSOCKET SERVICE SECTION ===
   */
+
+  // Fonction pour formater la date et l'heure
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
@@ -295,95 +263,7 @@ const NotifScreen: React.FC = () => {
     }
   };
 
-  // Fonction pour déterminer l'action selon le contenu du message
-  const getActionText = (message: string, senderData: any) => {
-    if (!senderData) {
-      return 'Notification système';
-    }
-    
-    const messageContent = message.toLowerCase();
-    console.log('Contenu du message:', messageContent);
-    // Actions sociales (comme Facebook)
-    if (messageContent.includes('commenté') || 
-        messageContent.includes('commentaire') || 
-        messageContent.includes('répondu')) {
-      return 'a commenté';
-    }
-    
-    if (messageContent.includes('aimé') || 
-        messageContent.includes('like') || 
-        messageContent.includes('j\'aime')) {
-      return 'a aimé';
-    }
-    
-    if (messageContent.includes('partagé') && 
-        (messageContent.includes('publication') || messageContent.includes('post'))) {
-      return 'a partagé';
-    }
-    
-    if (messageContent.includes('mentionné') || 
-        messageContent.includes('tagué') || 
-        messageContent.includes('@')) {
-      return 'vous a mentionné dans';
-    }
-    
-    // Si le message contient "un nouvel..." ou "une nouvelle..."
-    if (messageContent.includes('un nouvel') || messageContent.includes('une nouvelle')) {
-      return 'dit qu\'il y a';
-    }
-    
-    // Si le message contient des mots-clés d'assignation
-    if (messageContent.includes('assigné') || 
-        messageContent.includes('assignée') || 
-        messageContent.includes('terrain') ||
-        messageContent.includes('tâche') ||
-        messageContent.includes('mission')) {
-      return 'dit que';
-    }
-    
-    // Si le message contient des mots-clés de partage/envoi (documents)
-    if (messageContent.includes('partagé') && 
-        (messageContent.includes('document') || messageContent.includes('fichier'))) {
-      return 'vous a partagé';
-    }
-    
-    if (messageContent.includes('envoyé') || 
-        messageContent.includes('transmis')) {
-      return 'vous a envoyé';
-    }
-    
-    // Si le message contient des mots-clés d'invitation
-    if (messageContent.includes('invité') || 
-        messageContent.includes('invitation') || 
-        messageContent.includes('rejoindre')) {
-      return 'vous invite à';
-    }
-    
-    // Si le message contient des mots-clés de confirmation/validation
-    if (messageContent.includes('confirmé') || 
-        messageContent.includes('validé') || 
-        messageContent.includes('approuvé')) {
-      return 'confirme que';
-    }
-    
-    // Actions de suivi/abonnement
-    if (messageContent.includes('suivi') || 
-        messageContent.includes('abonné') || 
-        messageContent.includes('follow')) {
-      return 'vous suit maintenant';
-    }
-    if(messageContent.includes('Un nouvel')) {
-      return 'dit qu\'il y a';
-    }
-    // Actions de groupe/équipe
-    if (messageContent.includes('ajouté') && 
-        (messageContent.includes('groupe') || messageContent.includes('équipe'))) {
-      return 'vous a ajouté au';
-    }
-    
-    // Par défaut
-    return 'dit que';
-  };
+  // Fonction pour formatter une seule notification
   const formatSingleNotification = async (notifData: any): Promise<NotificationItem> => {
     let senderData = null;
     if (notifData.id_expediteur && notifData.id_expediteur !== 'null' && notifData.id_expediteur !== 'undefined') {
@@ -396,9 +276,8 @@ const NotifScreen: React.FC = () => {
       id: notifData.id_notification,
       type: 'comment',
       user: senderData ? `${senderData.prenoms} ${senderData.nom}` : 'Système',
-      avatar: senderData?.photo_profil || 'https://ui-avatars.com/api/?name=Systeme&background=007bff&color=fff',
-      action: getActionText(notifData.message, senderData),
-      actionLink: notifData.action, // Récupérer le lien depuis la DB
+      avatar: senderData?.photo_profil || 'https://ui-avatars.com/api/?name=Systeme&background=007bff&color=#064e3b',
+      action: senderData ? 'dit que' : 'Notification système',
       time: dateTimeFormatted.time,
       dateTime: dateTimeFormatted.dateTime,
       isRead: notifData.lu,
@@ -451,9 +330,9 @@ const NotifScreen: React.FC = () => {
       }
 
       if (data) {
-        // data.forEach((notif) => {
-        //   console.log('Notification reçue:', notif.statut);
-        // });
+        data.forEach((notif) => {
+          console.log('Notification reçue:', notif.statut);
+        });
 
         const formattedNotifications = await formatNotifications(data);
         
@@ -491,10 +370,8 @@ const NotifScreen: React.FC = () => {
     loadNotifications(0, false);
     loadCurrentUserData();
     setCurrentPage(0);
-
     // Initialiser le service WebSocket (COMMENTED FOR NOW)
     // initializeWebSocketService();
-
     // Configurer l'écoute en temps réel avec gestion optimisée
     const notificationSubscription = supabase
       .channel('notifications_realtime')
@@ -561,13 +438,13 @@ const NotifScreen: React.FC = () => {
       )
       .subscribe();
 
-    // Nettoyage de la subscription et WebSocket service
+    // Nettoyage de la subscription
     return () => {
       notificationSubscription.unsubscribe();
-      // cleanupWebSocketService(); // COMMENTED FOR NOW
-      // ou cleanupNotificationWebSocket(); // Pour nettoyer complètement l'instance singleton
+        // cleanupWebSocketService(); // COMMENTED FOR NOW
+      // ou cleanupNotificationWebSocket();
     };
-  }, [userId, loadCurrentUserData]); // Removed WebSocket dependencies for now
+  }, [userId, loadCurrentUserData]);
 
   const unreadCount = notifications.filter((n: NotificationItem) => !n.isRead).length;
 
@@ -610,10 +487,10 @@ const NotifScreen: React.FC = () => {
             {notifications.map((notification: NotificationItem) => (
               <TouchableOpacity
                 key={notification.id}
-                className={`flex-row p-4 border-b border-gray-200 relative ${
+                className={`flex-row p-4 bg-white border-b border-gray-200 relative ${
                   !notification.isRead ? 'bg-emerald-50' : 'bg-white'
                 }`}
-                onPress={() => handleNotificationPress(notification)}
+                onPress={() => markAsRead(notification.id)}
               >
                 {!notification.isRead && (
                   <View className="w-2 h-2 rounded-full bg-emerald-700 absolute left-2 top-5" />
@@ -627,20 +504,13 @@ const NotifScreen: React.FC = () => {
                 <View className="flex-1 flex-row justify-between items-start">
                   <View className="flex-1">
                     <Text className="text-base text-gray-900 leading-5">
-                      <Text className=" text-gray-700">{notification.user}</Text>
+                      <Text className="font-semibold text-gray-500">{notification.user}</Text>
                       {' ' + notification.action}
                     </Text>
                     
                     {notification.content && (
                       <Text className=" font-semibold text-sm text-gray-900 italic mt-1 leading-4">
                         {notification.content}
-                      </Text>
-                    )}
-                    
-                    {/* Afficher le lien d'action s'il existe */}
-                    {notification.actionLink && (
-                      <Text className="text-xs text-emerald-600 mt-1 underline">
-                        📎 Lien d'action disponible
                       </Text>
                     )}
                     

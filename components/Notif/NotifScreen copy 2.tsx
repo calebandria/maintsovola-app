@@ -302,7 +302,7 @@ const NotifScreen: React.FC = () => {
     }
     
     const messageContent = message.toLowerCase();
-    console.log('Contenu du message:', messageContent);
+    
     // Actions sociales (comme Facebook)
     if (messageContent.includes('commenté') || 
         messageContent.includes('commentaire') || 
@@ -372,9 +372,7 @@ const NotifScreen: React.FC = () => {
         messageContent.includes('follow')) {
       return 'vous suit maintenant';
     }
-    if(messageContent.includes('Un nouvel')) {
-      return 'dit qu\'il y a';
-    }
+    
     // Actions de groupe/équipe
     if (messageContent.includes('ajouté') && 
         (messageContent.includes('groupe') || messageContent.includes('équipe'))) {
@@ -382,7 +380,7 @@ const NotifScreen: React.FC = () => {
     }
     
     // Par défaut
-    return 'dit que';
+    return 'vous a envoyé une notification';
   };
   const formatSingleNotification = async (notifData: any): Promise<NotificationItem> => {
     let senderData = null;
@@ -397,7 +395,7 @@ const NotifScreen: React.FC = () => {
       type: 'comment',
       user: senderData ? `${senderData.prenoms} ${senderData.nom}` : 'Système',
       avatar: senderData?.photo_profil || 'https://ui-avatars.com/api/?name=Systeme&background=007bff&color=fff',
-      action: getActionText(notifData.message, senderData),
+      action: senderData ? 'vous a envoyé une notification' : 'Notification système',
       actionLink: notifData.action, // Récupérer le lien depuis la DB
       time: dateTimeFormatted.time,
       dateTime: dateTimeFormatted.dateTime,
@@ -438,7 +436,8 @@ const NotifScreen: React.FC = () => {
           message,
           date_creation,
           lu,
-          statut
+          statut,
+          action
         `, { count: 'exact' })
         .eq('id_destinataire', userId)
         .eq('statut', false) // Filtrer seulement les notifications non supprimées
@@ -451,9 +450,9 @@ const NotifScreen: React.FC = () => {
       }
 
       if (data) {
-        // data.forEach((notif) => {
-        //   console.log('Notification reçue:', notif.statut);
-        // });
+        data.forEach((notif) => {
+          console.log('Notification reçue:', notif.statut);
+        });
 
         const formattedNotifications = await formatNotifications(data);
         
@@ -627,12 +626,12 @@ const NotifScreen: React.FC = () => {
                 <View className="flex-1 flex-row justify-between items-start">
                   <View className="flex-1">
                     <Text className="text-base text-gray-900 leading-5">
-                      <Text className=" text-gray-700">{notification.user}</Text>
+                      <Text className="font-semibold text-gray-900">{notification.user}</Text>
                       {' ' + notification.action}
                     </Text>
                     
                     {notification.content && (
-                      <Text className=" font-semibold text-sm text-gray-900 italic mt-1 leading-4">
+                      <Text className="text-sm text-gray-500 italic mt-1 leading-4">
                         {notification.content}
                       </Text>
                     )}
