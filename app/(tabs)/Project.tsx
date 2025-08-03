@@ -120,10 +120,10 @@ const ListTerrain = ({ item, selected }: ListTerrainProps) => {
         activeOpacity={0.5}
         onPress={() => setModalVisible(true)}
       >
-        <View className="flex-row justify-between">
-          <View>
-            <Text className="text-xl font-bold">{item.titre}</Text>
-            <Text className="text-gray-500">
+        <View className="flex-row justify-between w-full">
+          <View className='w-[70%]'>
+            <Text className="text-xl font-bold" numberOfLines={1}>{item.titre}</Text>
+            <Text className="text-gray-500" numberOfLines={1}>
               {item.tantsaha?.nom} {item.tantsaha?.prenoms}
             </Text>
           </View>
@@ -200,9 +200,10 @@ export default function Project({isPass = false}: {isPass: boolean}) {
   }
 
   const [isSearchFocus, setIsSearchFocus] = useState(false);
-  const { projects, loading, refetch } = useProjects();
   const [selected, setSelected] = useState('all');
   const [isVisibleAdd, setisVisibleAdd] = useState<boolean>(false)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const { projects, loading, refetch } = useProjects();
 
   // Auth context
   const {user, profile} = useAuth();
@@ -223,6 +224,32 @@ export default function Project({isPass = false}: {isPass: boolean}) {
     setRefreshing(false);
   };
 
+  // Fonction pour filtrer les projets par recherche
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return projects; // Si pas de recherche, retourner tous les projets
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    
+    return projects.filter((project) => {
+      // Recherche dans le titre du projet
+      const titleMatch = project.titre?.toLowerCase().includes(query);
+      
+      // Recherche dans le nom et prénom du tantsaha
+      const nomMatch = project.tantsaha?.nom?.toLowerCase().includes(query);
+      const prenomMatch = project.tantsaha?.prenoms?.toLowerCase().includes(query);
+      
+      // Recherche dans le nom complet (nom + prénom)
+      const fullNameMatch = `${project.tantsaha?.nom} ${project.tantsaha?.prenoms}`
+        .toLowerCase()
+        .includes(query);
+      
+      // Retourner true si au moins une correspondance est trouvée
+      return titleMatch || nomMatch || prenomMatch || fullNameMatch;
+    });
+  }, [projects, searchQuery]);
+
   return (
     <ScrollView className="px-5">
       <View className="mt-4">
@@ -238,10 +265,12 @@ export default function Project({isPass = false}: {isPass: boolean}) {
           }`}>
           <SearchIcon size={20} color="#888" />
           <TextInput
-            placeholder="Rechercher..."
+            placeholder="Rechercher par titre ou nom d'agriculteur..."
             className="ml-2 flex-1"
             onFocus={() => setIsSearchFocus(true)}
             onBlur={() => setIsSearchFocus(false)}
+            onChangeText={setSearchQuery}
+            value={searchQuery}
           />
         </View>
 
@@ -268,7 +297,7 @@ export default function Project({isPass = false}: {isPass: boolean}) {
         <ProjectListSkeleton />
       ) : (
         <FlatList
-          data={projects}
+          data={filteredProjects}
           keyExtractor={(p) => String(p.id_projet)}
           renderItem={({ item }) => <ListTerrain item={item} selected={selected} />}
           scrollEnabled={false}
@@ -284,17 +313,19 @@ export default function Project({isPass = false}: {isPass: boolean}) {
           ListEmptyComponent={() => (
             <View className="p-8 items-center">
               <Text className="text-gray-500 text-center text-lg">
-                Aucun projet trouvé
+                {searchQuery.trim() ? 'Aucun projet correspondant à votre recherche' : 'Aucun projet trouvé'}
               </Text>
-              <Text className="text-gray-400 text-center mt-2">
-                Créez des projets ...
-              </Text>
-              <TouchableOpacity 
-                className="mt-3 flex flex-row items-center justify-center rounded-full py-3"
-                onPress={() => setisVisibleAdd(true)}
-              >
-                <Plus color="#47a13d" />
-              </TouchableOpacity>
+              <View className='flex flex-row items-center'>
+                <Text className="text-gray-300 text-center mt-2">
+                  {searchQuery.trim() ? 'Essayez une autre recherche ou créez un nouveau projet...' : 'Créez des projets...'}
+                </Text>
+                <TouchableOpacity 
+                  className="flex flex-row items-center justify-center rounded-full p-2"
+                  onPress={() => setisVisibleAdd(true)}
+                >
+                  <Plus color="#47a13d" />
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         />

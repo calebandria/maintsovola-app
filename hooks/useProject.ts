@@ -7,27 +7,26 @@ export function useProjects() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
-      const { data, error } = await supabase
-        .from('projet')
-        .select(`
-          *,
-          tantsaha:id_tantsaha(nom, prenoms),
-          terrain(id_terrain, nom_terrain),
-          region:id_region(nom_region),
-          district:id_district(nom_district),
-          commune:id_commune(nom_commune),
-          projet_culture(
-            id_projet_culture,
-            id_culture,
-            cout_exploitation_previsionnel,
-            culture(id_culture, nom_culture)
-          ),
-          investissements:investissement(montant)
-        `);
+    const { data, error } = await supabase
+      .from('projet')
+      .select(`
+        *,
+        tantsaha:id_tantsaha(nom, prenoms),
+        terrain(id_terrain, nom_terrain),
+        region:id_region(nom_region),
+        district:id_district(nom_district),
+        commune:id_commune(nom_commune),
+        projet_culture(
+          id_projet_culture,
+          id_culture,
+          cout_exploitation_previsionnel,
+          culture(id_culture, nom_culture)
+        ),
+        investissements:investissement(montant)
+      `);
+    if (!error) setData(data ?? []);
 
-      if (!error) setData(data ?? []);
-
-      setLoading(false);
+    setLoading(false);
   }
   useEffect(() => { fetchData(); }, []);
 
