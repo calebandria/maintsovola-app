@@ -302,25 +302,11 @@ export default function TerrainScreen() {
       ? pendingTerrains.filter((terrain) =>
           [
             terrain.nom_terrain,
-            terrain.region_name,
-            terrain.district_name,
-            terrain.commune_name,
-            terrain.techniqueNom,
-            terrain.superviseurNom,
-            terrain.tantsahaNom,
-            terrain.surface_proposee?.toString(),
           ].some((field) => (field?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
         )
       : validatedTerrains.filter((terrain) =>
           [
             terrain.nom_terrain,
-            terrain.region_name,
-            terrain.district_name,
-            terrain.commune_name,
-            terrain.techniqueNom,
-            terrain.superviseurNom,
-            terrain.tantsahaNom,
-            terrain.surface_proposee?.toString(),
           ].some((field) => (field?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
         );
   return (
