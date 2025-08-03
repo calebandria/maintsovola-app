@@ -13,15 +13,15 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { launchImageLibraryAsync } from 'expo-image-picker';
-import { supabase } from '@/utils/supabase';
-// Remplacer uuid par une fonction simple
-const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
+import { supabase } from '@/lib/data';
 import { CultureData } from '@/types/cultureData';
 import { ProjectData } from '@/type/projectInterface';
 import { TerrainData } from '@/types/terrainData';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { MapPlus } from 'lucide-react-native';
 import { router } from 'expo-router';
+// Remplacer uuid par une fonction simple
+const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
 function daysBetween(dateA?: string, dateB?: string): number {
   if (!dateA || !dateB) return 0;
@@ -63,7 +63,6 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
   const [selectedCultures, setSelectedCultures] = useState<number[]>([]);
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -154,6 +153,7 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
         setImages(prev => [...prev, tempImage]);
       }
     } catch (error) {
+      console.log(error)
       Alert.alert('Erreur', 'Erreur lors de la sélection de l\'image');
     }
   };
@@ -304,6 +304,7 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
         Alert.alert('Erreur', 'Impossible d\'enregistrer');
       }
     } catch (error) {
+      console.log(error)
       Alert.alert('Erreur', 'Erreur lors de l\'upload des images');
     }
     
