@@ -13,7 +13,7 @@ import {
 import { Button } from 'components/ui/terrain/Button';
 import { Badge } from '../ui/terrain/Badge';
 
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons, FontAwesome6, Feather } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
 import { TerrainData } from '../../types/Terrain';
@@ -125,23 +125,23 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
           onViewDetails?.(item);
         }}>
         <View style={styles.row}>
-          <View style={[styles.nom_terrain]}>
+          <View style={styles.info1}>
             <Text style={styles.terrainName}>{item.nom_terrain}</Text>
-            <Text style={styles.ownerText}>{item.tantsahaNom || 'Non spécifié'}</Text>
+            {/* <Text style={styles.terrainName}>{item.tantsahaNom || 'Non spécifié'}</Text> */}
           </View>
 
-          <View style={[styles.region_name]}>
+          {/* <View>
             <Text>
               {item.region_name}, {item.district_name}, {item.commune_name}
             </Text>
-          </View>
+          </View> */}
 
-          <View style={[styles.surface_proposee]}>
+          {/* <View>
             <Text>{item.surface_validee || item.surface_proposee} ha</Text>
             {item.surface_validee !== item.surface_proposee && (
               <Text style={styles.smallText}> Proposé: {item.surface_proposee} ha</Text>
             )}
-          </View>
+          </View> */}
           {type === 'pending' && userRole === 'superviseur' && (
             <View style={[styles.technicien]}>
               {item.id_technicien ? (
@@ -162,13 +162,13 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
             </View>
           )}
 
-          {type === 'validated' && (
+          {/* {type === 'validated' && (
             <View style={[styles.valide]}>
               <Text>{item.superviseurNom || 'Non spécifié'}</Text>
             </View>
-          )}
+          )} */}
 
-          <View style={[styles.access]}>
+          <View style={styles.info2}>
             <Badge variant={item.acces_eau ? 'success' : 'destructive'}>
               <MaterialIcons
                 name={item.acces_eau ? 'check' : 'close'}
@@ -188,13 +188,13 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
             </Badge>
           </View>
 
-          <View style={[styles.action, styles.actionsCell]}>
+          <View style={styles.iconContainer}>
             {onViewDetails && (
               <Button
                 variant="ghost"
                 size="icon"
                 onPress={() => onViewDetails(item)}
-                title={<MaterialCommunityIcons name="eye-outline" size={20} />}
+                title={<MaterialCommunityIcons name="eye-outline" size={20} color="white" />}
               />
             )}
             {onEdit && (
@@ -202,7 +202,7 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
                 variant="ghost"
                 size="icon"
                 onPress={() => onEdit(item)}
-                title={<MaterialCommunityIcons name="pencil-outline" size={20} />}
+                title={<FontAwesome6 name="edit" size={18} color="white" />}
               />
             )}
             {onDelete && (
@@ -210,23 +210,25 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
                 variant="ghost"
                 size="icon"
                 onPress={() => onDelete(item)}
-                title={<MaterialCommunityIcons name="trash-can-outline" size={20} />}
+                title={<Feather name="trash-2" size={20} color="white" />}
               />
             )}
             {onValidate && (userRole === 'superviseur' || userRole === 'technicien') && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onPress={() => onValidate(item)}
-                  title={<MaterialCommunityIcons name="check-circle-outline" size={20} />}
-                />
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onPress={() => onValidate(item)}
+                title={
+                  <MaterialCommunityIcons name="check-circle-outline" size={20} color="white" />
+                }
+              />
+            )}
             {onContactTechnicien && (
               <Button
                 variant="ghost"
                 size="icon"
                 onPress={() => onContactTechnicien(item)}
-                title={<MaterialCommunityIcons name="message-outline" size={20} />}
+                title={<MaterialCommunityIcons name="message-outline" size={20} color="white" />}
               />
             )}
           </View>
@@ -238,7 +240,7 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
   return (
     <View style={styles.container}>
       {/* En-tête du tableau */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity style={styles.nom_terrain} onPress={() => requestSort('nom_terrain')}>
           <Text>
             Terrain
@@ -279,7 +281,7 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
         <View style={(styles.headerCell, styles.action)}>
           <Text>Actions</Text>
         </View>
-      </View>
+      </View> */}
 
       {/* Liste des terrains */}
       <FlatList
@@ -351,18 +353,24 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   list: {
-    width: 786,
     // width: '100%',
     display: 'flex',
   },
   itemContainer: {
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    marginBottom: 10,
   },
   row: {
     flexDirection: 'row',
-    paddingVertical: 12,
+    paddingVertical: 18,
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#2B9A66',
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#5BB98B',
   },
   cell: {
     flex: 1,
@@ -375,6 +383,8 @@ const styles = StyleSheet.create({
   terrainName: {
     fontWeight: 'bold',
     fontSize: 14,
+    color: 'white',
+    paddingLeft: 10,
   },
   ownerText: {
     fontSize: 12,
@@ -428,36 +438,20 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginTop: 15,
   },
-  nom_terrain: {
-    width: 99,
-    paddingLeft: 15,
-    paddingRight: 10,
-  },
-  region_name: {
-    width: 141,
-    paddingLeft: 15,
-    paddingRight: 15,
-  },
-  surface_proposee: {
-    width: 84,
-    paddingLeft: 15,
-    paddingRight: 15,
-  },
   technicien: {
     width: 189,
-  },
-  access: {
-    width: 105,
-    paddingHorizontal: 10,
-  },
-  action: {
-    width: 168,
-    paddingLeft: 15,
-    paddingRight: 15,
   },
   valide: {
     width: 136,
   },
+  iconContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  info1: {
+    width: '25%',
+  },
+  info2: {},
 });
 
 export default TerrainTable;

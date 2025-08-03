@@ -175,48 +175,50 @@ const TerrainForm: React.FC<TerrainFormProps> = ({
     }
   }, [initialData]);
 
-
-  const uploadPhotos = async (photos: { uri: string; type?: string }[], folder: string = 'terrain-photos'): Promise<string[]> => {
+  const uploadPhotos = async (
+    photos: { uri: string; type?: string }[],
+    folder: string = 'terrain-photos'
+  ): Promise<string[]> => {
     if (photos.length === 0) return [];
-    
+
     setIsUploading(true);
     const uploadedUrls: string[] = [];
-    
+
     try {
       for (const photo of photos) {
         const uri = photo.uri;
         console.log('URI de la photo:', uri); // Pour déboguer
-        
+
         // Vérifier si le fichier existe
         const fileInfo = await FileSystem.getInfoAsync(uri);
         if (!fileInfo.exists) {
-          console.error('Le fichier n\'existe pas:', uri);
+          console.error("Le fichier n'existe pas:", uri);
           continue;
         }
-        
+
         // Lire le fichier en base64
         const base64 = await FileSystem.readAsStringAsync(uri, {
           encoding: FileSystem.EncodingType.Base64,
         });
-        
+
         // Convertir base64 en Uint8Array
         const buffer = Buffer.from(base64, 'base64');
         const fileData = new Uint8Array(buffer);
-        
+
         // Générer un nom de fichier unique
         const fileExt = uri.split('.').pop() || 'jpg'; // Par défaut à 'jpg' si pas d'extension
         const fileName = `terrain-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const filePath = `${folder}/${fileName}`;
-        
+
         // Uploader vers Supabase
         const { error: uploadError } = await supabase.storage
           .from('project-photos')
           .upload(filePath, fileData, {
             contentType: photo.type || 'image/jpeg', // Type MIME par défaut
           });
-          
+
         if (uploadError) {
-          console.error('Erreur lors de l\'upload:', uploadError);
+          console.error("Erreur lors de l'upload:", uploadError);
           toast({
             title: 'Erreur',
             description: `Échec du téléchargement: ${uploadError.message}`,
@@ -224,24 +226,24 @@ const TerrainForm: React.FC<TerrainFormProps> = ({
           });
           continue;
         }
-        
+
         // Récupérer l’URL publique
         const { data: publicUrlData } = supabase.storage
           .from('project-photos')
           .getPublicUrl(filePath);
-          
+
         if (publicUrlData && publicUrlData.publicUrl) {
           uploadedUrls.push(publicUrlData.publicUrl);
           console.log('URL publique:', publicUrlData.publicUrl); // Pour déboguer
         } else {
-          console.error('Impossible de récupérer l\'URL publique pour', fileName);
+          console.error("Impossible de récupérer l'URL publique pour", fileName);
         }
       }
-      
+
       console.log('URLs téléchargées:', uploadedUrls); // Pour déboguer
       return uploadedUrls;
     } catch (error) {
-      console.error('Erreur dans le processus d\'upload:', error);
+      console.error("Erreur dans le processus d'upload:", error);
       toast({
         title: 'Erreur',
         description:
@@ -255,8 +257,7 @@ const TerrainForm: React.FC<TerrainFormProps> = ({
     } finally {
       setIsUploading(false);
     }
-};
-
+  };
 
   const checkPolygonOverlap = async (geojson: any, idToOmit?: number) => {
     setCheckingOverlap(true);
@@ -314,32 +315,6 @@ const TerrainForm: React.FC<TerrainFormProps> = ({
           setIsSubmitting(false);
           return;
         }
-
-        // function coordsToWKTPolygon(coords: { latitude: number; longitude: number }[]): string {
-        //   const points = coords.map((c) => [c.longitude, c.latitude]);
-
-        //   // Ferme le polygone si ce n'est pas déjà fait
-        //   if (
-        //     points.length > 0 &&
-        //     (points[0][0] !== points[points.length - 1][0] ||
-        //       points[0][1] !== points[points.length - 1][1])
-        //   ) {
-        //     points.push(points[0]);
-        //   }
-
-        //   const ring = points.map(([lng, lat]) => `${lng} ${lat}`).join(', ');
-        //   return `POLYGON((${ring}))`;
-        // }
-
-        // Utilisation
-        // data.geom = coordsToWKTPolygon(polygonCoordinates);
-        // console.log(JSON.stringify(data.geom));
-        // console.log(
-        //   '*********__________________*' +
-        //     JSON.stringify(polygonCoordinates, null, 2) +
-        //     '**************************____________'
-        // );
-        // console.log(JSON.stringify(data));
       }
 
       data.surface_proposee = parseFloat(data.surface_proposee.toFixed(2));

@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { View, Text, ViewStyle, TextStyle, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import {
+  View,
+  Text,
+  ViewStyle,
+  TextStyle,
+  TouchableOpacity,
+  TouchableOpacityProps,
+} from 'react-native';
 
 // Types pour les variants
 type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';
@@ -46,7 +53,8 @@ const variantStyles: Record<BadgeVariant, { container: ViewStyle; text: TextStyl
   },
   destructive: {
     container: {
-      backgroundColor: '#FF3B30', // Couleur destructive
+      // backgroundColor: '#641723', // Couleur destructive
+      backgroundColor: '#2F265F', // Couleur destructive
       borderColor: 'transparent',
     },
     text: {
@@ -89,12 +97,8 @@ export function Badge({ className, variant = 'default', children, style, ...prop
     <TouchableOpacity
       style={[baseBadgeStyle, variantStyle.container, style]}
       activeOpacity={0.8}
-      {...props}
-    >
-      <Text style={[baseTextStyle, variantStyle.text]}>
-        {children}
-      </Text>
+      {...props}>
+      <Text style={[baseTextStyle, variantStyle.text]}>{children}</Text>
     </TouchableOpacity>
   );
 }
-

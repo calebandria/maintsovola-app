@@ -134,7 +134,7 @@ const TerrainFormFields: React.FC<TerrainFormFieldsProps> = ({
   // Gestion des photos
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes:   ImagePicker.MediaTypeOptions.Images, // Uncomment if using expo-image-picker
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Uncomment if using expo-image-picker
       allowsMultipleSelection: true,
       quality: 0.8,
     });
@@ -154,17 +154,17 @@ const TerrainFormFields: React.FC<TerrainFormFieldsProps> = ({
     });
 
     if (!result.canceled) {
-      const selectedPhotos = result.assets.map(asset => ({
+      const selectedPhotos = result.assets.map((asset) => ({
         uri: asset.uri,
         type: asset.type || 'image/jpeg',
       }));
       setPhotos([...photos, ...selectedPhotos]);
-      const previewUrls = result.assets.map(asset => asset.uri);
+      const previewUrls = result.assets.map((asset) => asset.uri);
       setPhotoUrls([...photoUrls, ...previewUrls]);
     }
   };
 
-// Suppression d'une photo
+  // Suppression d'une photo
   const removePhoto = (index: number) => {
     const newPhotos = [...photos];
     const newPhotoUrls = [...photoUrls];
@@ -220,6 +220,29 @@ const TerrainFormFields: React.FC<TerrainFormFieldsProps> = ({
             value: region.id_region,
             key: region.id_region,
           }))}
+          style={{
+            inputIOS: {
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 5,
+              padding: 0,
+              fontSize: 16,
+              color: '#333',
+              backgroundColor: '#FBFEFC',
+            },
+            inputAndroid: {
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 5,
+              padding: 0,
+              fontSize: 16,
+              color: '#333',
+              backgroundColor: '#FBFEFC',
+            },
+            placeholder: {
+              color: '#999',
+            },
+          }}
         />
       </View>
 
@@ -237,6 +260,29 @@ const TerrainFormFields: React.FC<TerrainFormFieldsProps> = ({
             value: district.id_district,
             key: district.id_district,
           }))}
+          style={{
+            inputIOS: {
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 5,
+              padding: 0,
+              fontSize: 16,
+              color: '#333',
+              backgroundColor: '#FBFEFC',
+            },
+            inputAndroid: {
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 5,
+              padding: 0,
+              fontSize: 16,
+              color: '#333',
+              backgroundColor: '#FBFEFC',
+            },
+            placeholder: {
+              color: '#999',
+            },
+          }}
         />
       </View>
 
@@ -251,6 +297,29 @@ const TerrainFormFields: React.FC<TerrainFormFieldsProps> = ({
             value: commune.id_commune,
             key: commune.id_commune,
           }))}
+          style={{
+            inputIOS: {
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 5,
+              padding: 0,
+              fontSize: 16,
+              color: '#333',
+              backgroundColor: '#FBFEFC',
+            },
+            inputAndroid: {
+              borderWidth: 1,
+              borderColor: '#ccc',
+              borderRadius: 5,
+              padding: 0,
+              fontSize: 16,
+              color: '#333',
+              backgroundColor: '#FBFEFC',
+            },
+            placeholder: {
+              color: '#999',
+            },
+          }}
         />
       </View>
 
@@ -317,13 +386,13 @@ const TerrainFormFields: React.FC<TerrainFormFieldsProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#F4FBF6',
   },
   content: {
-    padding: 16,
+    padding: 3,
   },
   field: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   row: {
     flexDirection: 'row',
@@ -334,15 +403,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 8,
-    color: '#333',
+    color: '#193B2D',
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderColor: '#ADDDC0',
+    borderRadius: 5,
     paddingHorizontal: 12,
-    backgroundColor: 'white',
+    backgroundColor: '#FBFEFC',
   },
   checkboxField: {
     flexDirection: 'row',

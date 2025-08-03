@@ -13,6 +13,7 @@ import { TerrainData } from '@/types/terrain';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '../ui/terrain/use-toast';
 import TerrainForm from './TerrainForm';
+import { Entypo } from '@expo/vector-icons';
 
 interface TerrainEditDialogProps {
   isOpen: boolean;
@@ -270,7 +271,7 @@ const TerrainEditDialog: React.FC<TerrainEditDialogProps> = ({
             variant="ghost"
             size="icon"
             onPress={onClose}
-            icon={<Text style={{ fontSize: 24, color: '#000' }}>×</Text>}
+            icon={<Entypo name="cross" size={24} color="black" />}
           />
         </View>
 
@@ -311,14 +312,15 @@ const TerrainEditDialog: React.FC<TerrainEditDialogProps> = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: 'white',
-    padding: 16,
+    backgroundColor: '#F4FBF6',
+    paddingVertical: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    margin: 16,
   },
   title: {
     fontSize: 20,
@@ -326,9 +328,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   description: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6B7280',
-    marginBottom: 16,
+    marginBottom: 3,
+    marginHorizontal: 16,
   },
   loadingContainer: {
     flex: 1,

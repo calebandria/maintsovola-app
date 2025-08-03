@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView ,TextInput } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
-import SubNavTabs from 'components/SubNavTabs';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { AntDesign, Feather } from '@expo/vector-icons';
+import SubNavTabs from 'components/terrain/TerrainSubNavTabs';
 import { useAuth } from 'contexts/AuthContext';
 import { router } from 'expo-router';
 import { supabase } from 'integrations/supabase/client';
@@ -11,15 +11,13 @@ import TerrainTable from '../../../components/terrain/TerrainTable';
 import TerrainEditDialog from '../../../components/terrain/TerrainEditDialog';
 import TerrainCard from '../../../components/terrain/TerrainCard';
 import MessageDialog from '../../../components/terrain/MessageDialog';
-import { grey100 } from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
-import { red } from 'react-native-reanimated/lib/typescript/Colors';
 
 const Header = ({ onCreateTerrain }: { onCreateTerrain: () => void }) => {
   return (
     <View style={styles.header}>
       <Text style={styles.title}>Gestion des terrains</Text>
       <TouchableOpacity style={styles.button} onPress={onCreateTerrain}>
-        <AntDesign name="plus" size={20} color="white" style={styles.icon} />
+        <Feather name="plus" color="#193B2D" style={styles.icon} />
         <Text style={styles.text}>Nouveau terrain</Text>
       </TouchableOpacity>
     </View>
@@ -30,7 +28,7 @@ export default function TerrainScreen() {
   const { user, profile } = useAuth();
 
   const userRole = profile?.nom_role?.toLowerCase() || 'simple';
-  console.log(userRole)
+  // console.log(userRole);
 
   useEffect(() => {
     if (!user) {
@@ -54,8 +52,6 @@ export default function TerrainScreen() {
   const [isTerrainValidateOpen, setIsTerrainValidateOpen] = useState(false);
   const [isTerrainDeleteOpen, setIsTerrainDeleteOpen] = useState(false);
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-
- 
 
   const [agriculteurs, setAgriculteurs] = useState<
     {
@@ -198,9 +194,8 @@ export default function TerrainScreen() {
       return 'En attente';
     }
   });
-  const tabs = userRole === 'superviseur' 
-    ? ['À assigner', 'À valider', 'Validés']
-    : ['En attente', 'Validés'];
+  const tabs =
+    userRole === 'superviseur' ? ['À assigner', 'À valider', 'Validés'] : ['En attente', 'Validés'];
 
   useEffect(() => {
     if (user) {
@@ -296,40 +291,57 @@ export default function TerrainScreen() {
     if (terrain.id_technicien) {
       setSelectedTechnicien({
         id: terrain.id_technicien,
-        name: `${terrain.techniqueNom ?? ''}`.trim()
+        name: `${terrain.techniqueNom ?? ''}`.trim(),
       });
       setIsMessageDialogOpen(true);
     }
   };
-   //icii
-const filteredTerrains = activeTab === 'En attente'
-  ? pendingTerrains.filter((terrain) =>
-      [terrain.nom_terrain, terrain.region_name, terrain.district_name, terrain.commune_name, terrain.techniqueNom, terrain.superviseurNom, terrain.tantsahaNom, terrain.surface_proposee?.toString()]
-        .some((field) => (field?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
-    )
-  : validatedTerrains.filter((terrain) =>
-      [terrain.nom_terrain, terrain.region_name, terrain.district_name, terrain.commune_name, terrain.techniqueNom, terrain.superviseurNom, terrain.tantsahaNom, terrain.surface_proposee?.toString()]
-        .some((field) => (field?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
-    );
+  //icii
+  const filteredTerrains =
+    activeTab === 'En attente'
+      ? pendingTerrains.filter((terrain) =>
+          [
+            terrain.nom_terrain,
+            terrain.region_name,
+            terrain.district_name,
+            terrain.commune_name,
+            terrain.techniqueNom,
+            terrain.superviseurNom,
+            terrain.tantsahaNom,
+            terrain.surface_proposee?.toString(),
+          ].some((field) => (field?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
+        )
+      : validatedTerrains.filter((terrain) =>
+          [
+            terrain.nom_terrain,
+            terrain.region_name,
+            terrain.district_name,
+            terrain.commune_name,
+            terrain.techniqueNom,
+            terrain.superviseurNom,
+            terrain.tantsahaNom,
+            terrain.surface_proposee?.toString(),
+          ].some((field) => (field?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
+        );
   return (
     <View style={styles.container}>
       <Header onCreateTerrain={handleCreateTerrain} />
-          <View style={styles.searchContainer}>
-            
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Rechercher un terrain..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCapitalize="none"
-            />
-          </View>
+      <View style={styles.searchContainer}>
+        <Feather name="search" size={26} style={styles.searchIcon} />
+        <TextInput
+          placeholder="Rechercher un terrain..."
+          placeholderTextColor={'#218358'}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          style={styles.inputSearch}
+        />
+      </View>
       {userRole === 'superviseur' ? (
         <View>
-        
           <SubNavTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
           {activeTab === 'À assigner' && (
-            <ScrollView horizontal={true} style={styles.viewContainer}>
+            <View style={styles.viewContainer}>
               <TerrainTable
                 terrains={filteredTerrains.filter((t) => !t.id_technicien)}
                 type="pending"
@@ -340,10 +352,10 @@ const filteredTerrains = activeTab === 'En attente'
                 onViewDetails={handleViewTerrainDetails}
                 onDelete={handleDeleteTerrain}
               />
-            </ScrollView>
+            </View>
           )}
           {activeTab === 'À valider' && (
-            <ScrollView horizontal={true} style={styles.viewContainer}>
+            <View style={styles.viewContainer}>
               <TerrainTable
                 terrains={filteredTerrains.filter((t) => !t.id_technicien)}
                 type="pending"
@@ -354,10 +366,10 @@ const filteredTerrains = activeTab === 'En attente'
                 onValidate={handleValidateTerrain}
                 onDelete={handleDeleteTerrain}
               />
-            </ScrollView>
+            </View>
           )}
           {activeTab === 'Validés' && (
-            <ScrollView horizontal={true} style={styles.viewContainer}>
+            <View style={styles.viewContainer}>
               <TerrainTable
                 terrains={filteredTerrains}
                 type="validated"
@@ -367,25 +379,29 @@ const filteredTerrains = activeTab === 'En attente'
                 onViewDetails={handleViewTerrainDetails}
                 onDelete={handleDeleteTerrain}
               />
-            </ScrollView>
+            </View>
           )}
         </View>
       ) : userRole === 'technicien' ? (
         <View>
-          <View style={styles.searchContainer}>
+          {/* <View style={styles.searchContainer}>
             <Text>Débug: Barre de recherche</Text>
-            <TextInput style={styles.searchInput}
+            <TextInput
+              style={styles.searchInput}
               placeholder="Rechercher un terrain..."
               value={searchQuery}
               onChangeText={(text) => setSearchQuery(text)}
               autoCapitalize="none"
               autoCorrect={false}
             />
-          </View>
-          <SubNavTabs tabs={['En attente', 'Validés']} activeTab={activeTab} onChange={setActiveTab} />
+          </View> */}
+          <SubNavTabs
+            tabs={['En attente', 'Validés']}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+          />
           {activeTab === 'En attente' && (
-            
-            <ScrollView horizontal={true} style={styles.viewContainer}>
+            <View style={styles.viewContainer}>
               <TerrainTable
                 terrains={filteredTerrains.filter((t) => t.id_technicien === user?.id)}
                 type="pending"
@@ -395,10 +411,10 @@ const filteredTerrains = activeTab === 'En attente'
                 onViewDetails={handleViewTerrainDetails}
                 onValidate={handleValidateTerrain}
               />
-            </ScrollView>
+            </View>
           )}
           {activeTab === 'Validés' && (
-            <ScrollView horizontal={true} style={styles.viewContainer}>
+            <View style={styles.viewContainer}>
               <TerrainTable
                 terrains={filteredTerrains.filter((t) => t.id_technicien === user?.id)}
                 type="validated"
@@ -406,14 +422,18 @@ const filteredTerrains = activeTab === 'En attente'
                 onTerrainUpdate={handleTerrainUpdate}
                 onViewDetails={handleViewTerrainDetails}
               />
-            </ScrollView>
+            </View>
           )}
         </View>
       ) : (
         <View>
-          <SubNavTabs tabs={['En attente', 'Validés']} activeTab={activeTab} onChange={setActiveTab} />
+          <SubNavTabs
+            tabs={['En attente', 'Validés']}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+          />
           {activeTab === 'En attente' && (
-            <ScrollView horizontal={true} style={styles.viewContainer}>
+            <View style={styles.viewContainer}>
               <TerrainTable
                 terrains={filteredTerrains}
                 type="pending"
@@ -421,12 +441,11 @@ const filteredTerrains = activeTab === 'En attente'
                 onTerrainUpdate={handleTerrainUpdate}
                 onEdit={handleEditTerrain}
                 onViewDetails={handleViewTerrainDetails}
-
               />
-            </ScrollView>
+            </View>
           )}
           {activeTab === 'Validés' && (
-            <ScrollView horizontal={true} style={styles.viewContainer}>
+            <View style={styles.viewContainer}>
               <TerrainTable
                 terrains={filteredTerrains}
                 type="validated"
@@ -435,7 +454,7 @@ const filteredTerrains = activeTab === 'En attente'
                 onViewDetails={handleViewTerrainDetails}
                 onContactTechnicien={handleContactTechnicien}
               />
-            </ScrollView>
+            </View>
           )}
         </View>
       )}
@@ -444,7 +463,7 @@ const filteredTerrains = activeTab === 'En attente'
         <TerrainEditDialog
           isOpen={isTerrainDialogOpen}
           onClose={() => setIsTerrainDialogOpen(false)}
-          terrain={selectedTerrain as any || undefined}
+          terrain={(selectedTerrain as any) || undefined}
           onSubmitSuccess={handleTerrainSaved as any}
           userId={user?.id ?? ''}
           userRole={userRole}
@@ -454,13 +473,13 @@ const filteredTerrains = activeTab === 'En attente'
       )}
 
       {/* Dialog pour validation de terrain */}
-      {isTerrainValidateOpen && selectedTerrain && 
+      {isTerrainValidateOpen && selectedTerrain && (
         <TerrainEditDialog
           isOpen={isTerrainValidateOpen}
           onClose={() => setIsTerrainValidateOpen(false)}
           terrain={{
             ...selectedTerrain,
-            id_tantsaha: selectedTerrain.id_tantsaha ?? undefined
+            id_tantsaha: selectedTerrain.id_tantsaha ?? undefined,
           }}
           onSubmitSuccess={handleTerrainSaved}
           userId={user?.id ?? ''}
@@ -468,14 +487,14 @@ const filteredTerrains = activeTab === 'En attente'
           isValidationMode={true}
           agriculteurs={agriculteurs}
         />
-      }
+      )}
 
       {/* Card pour affichage des détails du terrain */}
       {isTerrainCardOpen && selectedTerrain && (
-        <TerrainCard 
-          isOpen={isTerrainCardOpen} 
-          onClose={() => setIsTerrainCardOpen(false)} 
-          terrain={selectedTerrain} 
+        <TerrainCard
+          isOpen={isTerrainCardOpen}
+          onClose={() => setIsTerrainCardOpen(false)}
+          terrain={selectedTerrain}
           onTerrainUpdate={handleTerrainUpdate}
           userRole={userRole}
         />
@@ -483,11 +502,11 @@ const filteredTerrains = activeTab === 'En attente'
 
       {/* Card pour suppression de terrain */}
       {isTerrainDeleteOpen && selectedTerrain && (
-        <TerrainCard 
-          isOpen={isTerrainDeleteOpen} 
-          onClose={() => setIsTerrainDeleteOpen(false)} 
-          terrain={selectedTerrain} 
-          onTerrainUpdate={handleTerrainUpdate} 
+        <TerrainCard
+          isOpen={isTerrainDeleteOpen}
+          onClose={() => setIsTerrainDeleteOpen(false)}
+          terrain={selectedTerrain}
+          onTerrainUpdate={handleTerrainUpdate}
           isDeleteMode={true}
           userRole={userRole}
         />
@@ -507,43 +526,47 @@ const filteredTerrains = activeTab === 'En attente'
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 10,
+    backgroundColor: '#FBFEFC',
   },
   header: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   title: {
     fontSize: 23,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#4d7c0f',
+    color: '#218358',
     width: '50%',
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#16a34a',
+    backgroundColor: '#C4E8D1',
     padding: 14,
     borderRadius: 8,
     gap: 14,
+    borderColor: '#5BB98B',
+    borderWidth: 2,
   },
   text: {
     fontSize: 15,
-    fontWeight: '500',
-    color: 'white',
+    fontWeight: 'bold',
+    color: '#193B2D',
   },
   icon: {
-    fontSize: 15,
-    fontWeight: 600,
+    fontSize: 22,
+    fontWeight: 'bold',
   },
   viewContainer: {
     borderColor: '#e5e7eb',
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     maxHeight: 550,
-    height: '95%',
+    height: '76%',
   },
   littleDescription: {
     fontSize: 15,
@@ -551,14 +574,31 @@ const styles = StyleSheet.create({
     marginVertical: 15,
   },
   searchContainer: {
-  marginBottom: 10,
+    position: 'relative',
+    display: 'flex',
+    justifyContent: 'center',
+    paddingLeft: '10%',
+    paddingRight: '5%',
+    borderWidth: 1,
+    borderColor: '#5BB98B',
+    borderRadius: 15,
+    paddingVertical: 5,
+    marginVertical: 5,
+    backgroundColor: '#F4FBF6',
+    marginBottom: 10,
   },
   searchInput: {
-    height: 40,
     borderColor: '#9ca3af',
     borderWidth: 1,
     borderRadius: 10,
-    paddingHorizontal: 10,
     fontSize: 16,
+  },
+  inputSearch: {
+    color: '#193B2D',
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '3%',
+    color: '#30A46C',
   },
 });
