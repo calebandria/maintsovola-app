@@ -4,13 +4,10 @@ import {
   areAllJalonsCompleted,
   startProjectProduction,
   completeProject,
-  type ProjectDetails,
   type Investment,
   type ProjectJalon,
-  useProjects,
-  useDetails
 } from "@/hooks/useProject";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { 
   ActivityIndicator, 
   Modal, 
@@ -24,7 +21,7 @@ import {
 } from "react-native";
 // import CreateProjectModal from "../CreateProjectModal";
 import { ProjectMilestonesModal } from "../ProjectMilestones";
-import { supabase } from "~/utils/supabase";
+import { supabase } from "~/lib/data";
 import { ProjectData } from "~/type/projectInterface";
 import { useProjectData } from "@/hooks/useProject";
 import CreateProjectModal from "../CreateProjectModal";
@@ -52,7 +49,6 @@ export const ModalDetails = ({ projectId, isVisible, onClose, userProfile }: Mod
     error,
     refetchAll,
     refetchProject,
-    refetchInvestments,
     refetchJalons
   } = useProjectData(projectId);
   const projects = project
@@ -561,7 +557,7 @@ export const ModalDetails = ({ projectId, isVisible, onClose, userProfile }: Mod
                   <TouchableOpacity className="p-1" onPress={() => setFinJal(true)}>
                     <Text className={`text-2xl py-1 px-4 rounded-md w-full ${finJal && 'bg-white'}`}>
                       Jalons & Production
-                    </Text>Nou
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
