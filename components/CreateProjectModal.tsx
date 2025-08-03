@@ -371,11 +371,7 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
               onPress={()=> {router.replace("/(tabs)/terrain")}}
             >
               <Text className='text-blue-400 font-semibold'>terrain</Text>
-<<<<<<< HEAD
               <MapPlus color="#45ba50" height={20}></MapPlus>
-=======
-              <MapPlus color="#105216" height={15}></MapPlus>
->>>>>>> 8baed93 (/feat: better UI, amelioration of cration modal)
             </TouchableOpacity>
             
           </View>
