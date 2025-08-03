@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 import { supabase } from '~/lib/supabase';
+=======
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '~/lib/data';
+
+// Configuration du client Supabase avec les mmes paramètres que AuthContext
+>>>>>>> 9b8ef07 (fix: adding new features in project dashboard and dealing with createclient issue)
 
 type Utilisateur = {
   id_utilisateur: number;
@@ -77,7 +84,7 @@ export const getAllProjects = async (params?: GetAllProjectsParams) => {
 
   if (!data || data.length === 0) return [];
 
-  const projectIds = data.map((project) => project.id_projet);
+  const projectIds = data.map((project) => project.id_projet).filter((id): id is number => id !== null)
   const { data: photosData, error: photosError } = await supabase
     .from('projet')
     .select(
@@ -105,7 +112,7 @@ export const getAllProjects = async (params?: GetAllProjectsParams) => {
   return projectsWithPhotos;
 };
 
-export const getProjectById = async (projectId: string) => {
+export const getProjectById = async (projectId: number) => {
   const { data, error } = await supabase
     .from('vue_projet_detaille')
     .select(
@@ -235,7 +242,7 @@ export const getProjetctFromFollowing = async (
     if (!data || data.length === 0) return [];
 
     // 3. Récupérer les photos liées aux projets
-    const projectIds = data.map((project) => project.id_projet);
+    const projectIds = data.map((project) => project.id_projet).filter((id): id is number => id !== null);
     const { data: photosData, error: photosError } = await supabase
       .from('projet')
       .select(
@@ -294,7 +301,7 @@ export const getCommentsByProjectId = async (projectId: number, userId?: string)
   }
 
   // Récupérer les IDs d'utilisateurs uniques
-  const userIds = [...new Set(commentsData.map((comment) => comment.id_utilisateur))];
+  const userIds = [...new Set(commentsData.map((comment) => comment.id_utilisateur))].filter((id): id is string => id !== null)
 
   // Deuxième requête : récupérer les informations des utilisateurs
   const { data: usersData, error: usersError } = await supabase
@@ -314,7 +321,7 @@ export const getCommentsByProjectId = async (projectId: number, userId?: string)
         acc[user.id_utilisateur] = user;
         return acc;
       },
-      {} as Record<number, any>
+      {} as Record<string, any>
     ) || {};
 
   // Si on a des commentaires et un userId, récupérer les likes en une seule requête
@@ -334,10 +341,10 @@ export const getCommentsByProjectId = async (projectId: number, userId?: string)
   const likesByComment =
     likesData?.reduce(
       (acc, like) => {
-        if (!acc[like.id_commentaire]) {
-          acc[like.id_commentaire] = [];
+        if (!acc[like.id_commentaire?? 0]) {
+          acc[like.id_commentaire?? 0] = [];
         }
-        acc[like.id_commentaire].push(like);
+        acc[like.id_commentaire?? 0].push(like);
         return acc;
       },
       {} as Record<number, any[]>
@@ -348,14 +355,14 @@ export const getCommentsByProjectId = async (projectId: number, userId?: string)
     const commentLikes = likesByComment[comment.id_commentaire] || [];
     return {
       ...comment,
-      utilisateur: usersMap[comment.id_utilisateur] || {
+      utilisateur: usersMap[comment.id_utilisateur?? ''] || {
         nom: 'Utilisateur',
         prenoms: 'Inconnu',
         photo_profil: null,
       },
       likes: commentLikes.length,
       isLiked: userId ? commentLikes.some((like) => like.id_utilisateur === userId) : false,
-    };
+    }
   });
 
   return commentsWithLikes;
@@ -374,7 +381,7 @@ export const getLikesByCommentId = async (commentId: number) => {
   return data;
 };
 
-export const getProjectLikesCount = async (projectId: string) => {
+export const getProjectLikesCount = async (projectId: number) => {
   const { data, error } = await supabase
     .from('aimer_projet')
     .select('id_projet', { count: 'exact' })
@@ -481,7 +488,7 @@ export const getFilteredProjects = async (filters: {
 
   // Récupérer les photos pour chaque projet
   if (data && data.length > 0) {
-    const projectIds = data.map((project) => project.id_projet);
+    const projectIds = data.map((project) => project.id_projet).filter((id): id is number => id !== null)
     const { data: photosData, error: photosError } = await supabase
       .from('projet')
       .select(
