@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { TechnicalResource } from '@/types/technicien';
+import { TechnicalResource } from '~/types/technicien';
 
 export const useTechnicalResources = () => {
   const [resources, setResources] = useState<TechnicalResource[]>([]);

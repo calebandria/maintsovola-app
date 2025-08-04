@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "~/integrations/supabase/client";
+import { useToast } from "~/hooks/use-toast";
 import TerrainCard from '~/components/Dashboard/Navigation/technicien/TerrainCard';
-import { TerrainData } from "@/types/terrain";
+import { TerrainData } from "~/types/terrain";
 
 interface TerrainCardDialogProps {
   isOpen: boolean;

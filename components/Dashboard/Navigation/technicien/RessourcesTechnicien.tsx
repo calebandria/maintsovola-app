@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, FlatList, TextInput } from 'react-native';
 import { Search, FileText, BookOpen, Wrench, GraduationCap, Download } from 'lucide-react-native';
 import { useTechnicalResources } from '~/hooks/useTechnicalRessources';
-import { TechnicalResource } from '@/types/technicien';
+import { TechnicalResource } from '~/types/technicien';
 import { Picker } from '@react-native-picker/picker';
 
 const TechnicalResourcesLibrary: React.FC = () => {

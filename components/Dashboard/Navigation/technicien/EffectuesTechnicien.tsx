@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Calendar, Clock, CheckCircle, Eye } from 'lucide-react-native';
 import { useWeeklyPlannings } from '~/hooks/useWeeklyPlanning';
-import { WeeklyTask } from '@/types/technicien';
+import { WeeklyTask } from '~/types/technicien';
 // import JalonReportDialog from '@/components/JalonReportDialog';
 
 interface CompletedTasksListProps {

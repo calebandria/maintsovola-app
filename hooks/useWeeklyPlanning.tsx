@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '~/lib/data';
-import { WeeklyTask } from '@/types/technicien';
+import { WeeklyTask } from '~/types/technicien';
 
 export const useWeeklyPlannings = (userId: string, userRole: string) => {
   const [tasks, setTasks] = useState<WeeklyTask[]>([]);

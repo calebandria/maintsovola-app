@@ -5,7 +5,7 @@ import { ProgressBar } from "react-native-paper";
 import { Badge } from "~/components/ui/terrain/Badge";
 import { Button } from "~/components/ui/Button";
 import { supabase } from "~/lib/data";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "~/hooks/use-toast";
 import UserAvatar from "~/components/terrain/UserAvatar";
 import { ExternalLink } from "lucide-react-native";
 import { TerrainCardDialog } from "~/components/terrain/TerrainCardDialog";

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '~/lib/data';
-import { AssignedParcel } from '@/types/technicien';
+import { AssignedParcel } from '~/types/technicien';
 
 export const useAssignedParcels = (userId: string, userRole: string) => {
   const [parcels, setParcels] = useState<AssignedParcel[]>([]);
