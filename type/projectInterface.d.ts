@@ -55,6 +55,8 @@ export interface ProjectDataDetails {
   id_technicien?: string;
   id_superviseur?: string;
   id_terrain: number;
+  date_lancement?: string;
+  date_fin?: string;
   tantsaha?: {
     nom: string;
     prenoms?: string;
@@ -82,14 +84,18 @@ export interface ProjectDataDetails {
   commune?: {
     nom_commune?: string;
   };
-  projet_culture?: {
+  projet_culture: Array<{
     id_projet_culture: number;
     id_culture: number;
+    cout_exploitation_previsionnel: number;
+    rendement_previsionnel: number;
+    date_debut_previsionnelle: string;
     culture?: {
-      nom_culture?: string;
+      nom_culture: string;
+      prix_tonne: number;
+      rendement_ha: number;
     };
-    cout_exploitation_previsionnel?: number;
-  }[];
+  }>;
   photos?: string;
   id_region?: number;
   id_district?: number;
