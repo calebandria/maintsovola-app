@@ -99,7 +99,7 @@ const CreateProjectModal = ({ project, onClose, userProfile }: Props) => {
       const { data: terrainData } = await query;
       setTerrains(terrainData ?? []);
       if (project?.id_terrain) {
-        const found = terrainData?.find(t => t.id_terrain === project.id_terrain);
+        const found = terrainData?.find(t => t.id === project.id_terrain);
         setSelectedTerrain(found ?? null);
       }
       if (project?.projet_culture) {
