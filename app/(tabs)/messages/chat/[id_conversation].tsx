@@ -19,14 +19,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getConversationById, getMessages, sendMessage, subscribeToMessages, uploadFile, getUser } from '~/services/conversation-message-service';
 import { Conversation, Message, Utilisateur } from '~/type/messageInterface';
 import { useAuth } from '~/contexts/AuthContext';
-import { LucideArrowLeft, LucidePhone, LucideVideo, LucideMoreVertical, LucideSend } from 'lucide-react-native';
-import { supabase } from '~/lib/supabase';
 import { LucideArrowLeft, LucidePhone, LucideVideo, LucideMoreVertical, LucideSend, LucideCamera, LucideMic, LucideImage, LucideSmile } from 'lucide-react-native';
 import { supabase } from '~/lib/data';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useHideNavbar } from '~/contexts/NavContext';
- // Import du hook personnalisé
+
 const ChatScreen = () => {
   const { id_conversation } = useLocalSearchParams<{ id_conversation: string }>();
   const { user } = useAuth();
@@ -49,9 +46,6 @@ const ChatScreen = () => {
   const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   
-  useHideNavbar(); 
-  // Utilisation du hook pour cacher la navbar
-
   // États pour les infos de l'autre utilisateur
   const [otherUser, setOtherUser] = useState<{
     nom: string;
@@ -220,7 +214,6 @@ const ChatScreen = () => {
       created_at: new Date().toISOString(),
       modified_at: new Date().toISOString(),
       pieces_jointes: selectedFiles.map((file) => file.uri || ''),
-      // pieces_jointes: uploadFile ? uploadFile.map(file => file.uri) : undefined,
     };
 
     setMessages((prev) => [...prev, tempMessage]);
@@ -651,7 +644,7 @@ const ChatScreen = () => {
                   setContextMenuVisible(true);
                 }}
               >
-                <Text className="text-gray-700 text-base font-medium">Plus d'options</Text>
+                <Text className="text-gray-700 text-base font-medium">Plus d&apos;options</Text>
               </TouchableOpacity>
             </View>
           </View>

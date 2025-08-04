@@ -11,9 +11,13 @@ import {
   LucideShoppingBag,
   LucidePlay,
   LucideBell,
-  LucideHome
+  LucideHome,
+  LucideLocationEdit,
+  LucideArchive
 } from "lucide-react-native"
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getCountUnreadMessages, getCountUnreadNotification } from "~/services/conversation-message-service";
+import { useAuth } from "~/contexts/AuthContext";
 
 interface HeaderProps {
   type: 'home' | 'tabs' | 'profile' | 'hidden';
@@ -22,11 +26,41 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ type, title, username }) => {
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
+  const [unreadNotificationCount, setUnreadNotificationsCount] = useState<number>(0);
+
+
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
+  const userId = user?.id ?? '';
 
   const [isSearchPageVisible, setSearchPageVisible] = useState(false);
 
+
+  useEffect(() => {
+    const fetchUnreadMessagesCount = async () => {
+      try {
+        const count = await getCountUnreadMessages(userId);
+        setUnreadMessagesCount(count);
+      } catch (error) {
+        console.error("Error fetching unread messages count:", error);
+      }
+    };
+    const fetchUnreadNotificationCount = async () => {
+      try {
+        const count = await getCountUnreadNotification(userId);
+        setUnreadNotificationsCount(count);
+      } catch (error) {
+        console.error("Error fetching unread messages count:", error);
+      }
+    };
+
+    fetchUnreadNotificationCount();
+    fetchUnreadMessagesCount();
+  }, [userId]);
+
+  
   if (type === 'hidden') return null;
 
   // Fonction pour déterminer si un onglet est actif
@@ -138,25 +172,26 @@ const Header: React.FC<HeaderProps> = ({ type, title, username }) => {
               />
               
               <NavIcon
-                icon={<LucideUsers size={24} color={isActiveTab('/terrain') ? "#22C55E" : "#65676B"} />}
+                icon={<LucideLocationEdit size={24} color={isActiveTab('/terrain') ? "#22C55E" : "#65676B"} />}
                 path="/terrain"
               />
               
               <NavIcon
                 icon={<LucideMessageCircleMore size={24} color={isActiveTab('/messages') ? "#22C55E" : "#65676B"} />}
                 path="/messages"
-                badgeCount={3}
+                badgeCount={unreadMessagesCount !==0 ? unreadMessagesCount : undefined}
               />
               
               <NavIcon
-                icon={<LucideShoppingBag size={24} color={isActiveTab('/projet') ? "#22C55E" : "#65676B"} />}
+                icon={<LucideArchive size={24} color={isActiveTab('/projet') ? "#22C55E" : "#65676B"} />}
                 path="/projet"
               />
               
               <NavIcon
                 icon={<LucideBell size={24} color={isActiveTab('/notifications') ? "#22C55E" : "#65676B"} />}
                 path="/notifications"
-                badgeCount={7}
+                badgeCount={unreadNotificationCount !==0 ? unreadNotificationCount : undefined}
+
               />
               
               <NavIcon
@@ -179,25 +214,27 @@ const Header: React.FC<HeaderProps> = ({ type, title, username }) => {
               />
               
               <NavIcon
-                icon={<LucideUsers size={24} color={isActiveTab('/terrain') ? "#22C55E" : "#65676B"} />}
+                icon={<LucideLocationEdit size={24} color={isActiveTab('/terrain') ? "#22C55E" : "#65676B"} />}
                 path="/terrain"
               />
               
               <NavIcon
                 icon={<LucideMessageCircleMore size={24} color={isActiveTab('/messages') ? "#22C55E" : "#65676B"} />}
                 path="/messages"
-                badgeCount={3}
+                badgeCount={unreadMessagesCount !==0 ? unreadMessagesCount : undefined}
+
               />
               
               <NavIcon
-                icon={<LucideShoppingBag size={24} color={isActiveTab('/projet') ? "#22C55E" : "#65676B"} />}
+                icon={<LucideArchive size={24} color={isActiveTab('/projet') ? "#22C55E" : "#65676B"} />}
                 path="/projet"
               />
               
               <NavIcon
                 icon={<LucideBell size={24} color={isActiveTab('/notifications') ? "#22C55E" : "#65676B"} />}
                 path="/notifications"
-                badgeCount={7}
+                badgeCount={unreadNotificationCount !==0 ? unreadNotificationCount : undefined}
+
               />
               
               <NavIcon

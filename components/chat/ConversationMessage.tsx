@@ -31,6 +31,7 @@ import Modal from 'react-native-modal';
 import { LucideX, LucideSearch, LucidePlus } from 'lucide-react-native';
 import { supabase } from '~/lib/data';
 import SearchSuggestionsPage from './SearchSuggestion';
+import { useLastPage } from '~/contexts/LastPageContext';
 
 const { height: screenHeight } = Dimensions.get('window');
 

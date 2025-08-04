@@ -460,13 +460,13 @@ export const getCountUnreadMessages = async (userId: string): Promise<number> =>
 export const getCountUnreadNotification = async (userId: string): Promise<number> => {
   try {
       const { count, error } = await supabase
-          .from('message')
+          .from('notification')
           .select('*', { count: 'exact', head: true })
           .eq('id_destinataire', userId)
           .eq('lu', false);
 
       if (error) {
-          console.error('Error getting unread messages count:', error);
+          console.error('Error getting unread notification count:', error);
           return 0;
       }
 

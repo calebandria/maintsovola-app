@@ -26,7 +26,7 @@ import {
   LucideUserCircle, 
 } from "lucide-react-native"
 import { useAuth } from "~/contexts/AuthContext";
-import { getUnreadMessagesCount, getUser} from "~/services/conversation-message-service";
+import { getCountUnreadMessages, getUnreadMessagesCount, getUser} from "~/services/conversation-message-service";
 
 interface NavItem {
   name: string
