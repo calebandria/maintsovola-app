@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 import type { ProjectData, ProjectDataDetails } from '@/type/projectInterface';
 
 export function useProjects() {

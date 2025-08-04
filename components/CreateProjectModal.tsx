@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { launchImageLibraryAsync } from 'expo-image-picker';
-import { supabase } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 import { CultureData } from '@/types/cultureData';
 import { ProjectData } from '@/type/projectInterface';
 import { TerrainData } from '@/types/terrainData';
