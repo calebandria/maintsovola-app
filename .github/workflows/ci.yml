@@ -114,7 +114,7 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build, build-android, build-ios]
+    needs: [build-web, build-android, build-ios]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
