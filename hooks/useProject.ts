@@ -34,7 +34,7 @@ export function useProjects() {
 }
 
 export function useDetails(projectId: number) {
-  const [data, setData] = useState<ProjetWithDetails>();
+  const [data, setData] = useState<ProjectDataDetails>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
