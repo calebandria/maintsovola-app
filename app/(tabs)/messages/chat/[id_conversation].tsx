@@ -8,19 +8,18 @@ import {
   TouchableOpacity,
   Platform,
   SafeAreaView,
-  StyleSheet,
   Alert,
   Image,
   Keyboard,
-  KeyboardAvoidingView,
-  Dimensions
+  Dimensions,
+  Modal,
+  Pressable
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getConversationById, getMessages, sendMessage, subscribeToMessages, uploadFile, getUser } from '~/services/conversation-message-service';
-
 import { Conversation, Message, Utilisateur } from '~/type/messageInterface';
 import { useAuth } from '~/contexts/AuthContext';
-import { LucideArrowLeft, LucidePhone, LucideVideo, LucideMoreVertical, LucideSend } from 'lucide-react-native';
+import { LucideArrowLeft, LucidePhone, LucideVideo, LucideMoreVertical, LucideSend, LucideCamera, LucideMic, LucideImage, LucideSmile } from 'lucide-react-native';
 import { supabase } from '~/lib/data';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,9 +39,11 @@ const ChatScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
 
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [reactionModalVisible, setReactionModalVisible] = useState(false);
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   
   // États pour les infos de l'autre utilisateur
@@ -56,7 +57,7 @@ const ChatScreen = () => {
     isOnline: false
   });
 
-  //gestion clavier
+  // Gestion clavier
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
@@ -78,11 +79,6 @@ const ChatScreen = () => {
     };
   }, []);
 
-
-  // Calcul de l'offset pour KeyboardAvoidingView
-  // Header height (approximatif) + safe area top + marge de sécurité
-  const keyboardVerticalOffset = Platform.OS === 'ios' ? insets.top + 60 : 150;
-
   const fetchMessages = useCallback(async () => {
     if (!parsedConvId || isNaN(parsedConvId)) {
       setConvValid(false);
@@ -90,8 +86,6 @@ const ChatScreen = () => {
     }
     try {
       const fetched = await getMessages({ id_conversation: parsedConvId });
-      //setMessages(fetched);
-      // trier par date
       const sortedMessages = fetched.sort((a, b) => 
         new Date(a.date_envoi).getTime() - new Date(b.date_envoi).getTime()
       );
@@ -123,7 +117,6 @@ const ChatScreen = () => {
         const otherId = data.id_utilisateur1 === user.id ? data.id_utilisateur2 : data.id_utilisateur1;
         setReceiverId(otherId);
 
-        // Récupérer les infos de l'autre utilisateur
         const { username, photo_profil } = await getUser({ id: otherId });
         const cleanedUsername = username 
           ? username.replace(/\bnull\b/gi, '').trim().replace(/\s+/g, ' ')
@@ -132,7 +125,7 @@ const ChatScreen = () => {
         setOtherUser({
           nom: cleanedUsername || 'Utilisateur',
           photoProfil: photo_profil,
-          isOnline: Math.random() > 0.5 // Simulation statut en ligne (à remplacer par vraie logique)
+          isOnline: Math.random() > 0.5
         });
 
       } catch (err) {
@@ -162,12 +155,29 @@ const ChatScreen = () => {
     };
   }, [parsedConvId]);
 
-  // Couleurs d'avatar aléatoires
-  const getAvatarColor = (userId: string) => {
-    const colors = ['#25D366', '#34B7F1', '#FF6B6B', '#4ECDC4', '#9B59B6', '#F39C12', '#E74C3C', '#27AE60'];
-    const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-    return colors[index];
-  };
+  const UserIcon = ({ size = 28 }: { size?: number }) => (
+    <View 
+      className="bg-gray-300 rounded-full items-center justify-center"
+      style={{ width: size, height: size }}
+    >
+      <View 
+        className="bg-gray-500 rounded-full"
+        style={{ 
+          width: size * 0.4, 
+          height: size * 0.4,
+          marginBottom: size * 0.1
+        }}
+      />
+      <View 
+        className="bg-gray-500 rounded-full"
+        style={{ 
+          width: size * 0.6, 
+          height: size * 0.35,
+          marginTop: size * 0.05
+        }}
+      />
+    </View>
+  );
 
   const handleFilePick = async () => {
     try {
@@ -186,12 +196,10 @@ const ChatScreen = () => {
 
   const handleSend = async (): Promise<void> => {
     if (!input.trim() && selectedFiles.length === 0) {
-      console.warn('Aucun contenu ou fichier à envoyer');
       return;
     }
 
     if (!user?.id || !receiverId) {
-      console.warn('Missing user or receiverId');
       return;
     }
 
@@ -244,27 +252,7 @@ const ChatScreen = () => {
       setMessages((prev) => prev.filter((msg) => msg.id_message !== tempMessage.id_message));
     } catch (err: any) {
       console.error('Erreur envoi message:', err);
-      let errorMessage = 'Erreur lors de l\'envoi du message. Veuillez vérifier votre connexion et réessayer.';
-      if (err.message.includes('Network request failed')) {
-        errorMessage = 'Problème de connexion réseau. Veuillez vérifier votre connexion Internet.';
-      } else if (err.message.includes('Failed to upload file')) {
-        errorMessage = 'Échec de l\'envoi des fichiers joints. Le message texte a été envoyé.';
-      }
-      setError(errorMessage);
-      if (inputToSend) {
-        try {
-          await sendMessage({
-            id_conversation: parsedConvId,
-            id_expediteur: user.id,
-            id_destinataire: receiverId,
-            contenu: inputToSend,
-            files: [],
-          });
-          setMessages((prev) => prev.filter((msg) => msg.id_message !== tempMessage.id_message));
-        } catch (textErr) {
-          console.error('Failed to send text-only message:', textErr);
-        }
-      }
+      setError('Erreur lors de l\'envoi du message.');
     }
   };
 
@@ -272,34 +260,37 @@ const ChatScreen = () => {
     const { pageX, pageY } = event.nativeEvent;
     setSelectedMessage(message);
     setMenuPosition({ x: pageX, y: pageY });
-    setMenuVisible(true);
+    setReactionModalVisible(true);
   };
 
   const addReaction = async (emoji: string) => {
-    if (!selectedMessage) return;
+    if (!selectedMessage || !user?.id) return;
     
     try {
-      // Appel à votre service pour ajouter la réaction
-      // await addReactionToMessage(selectedMessage.id_message, emoji, user.id);
-      
-      // Mise à jour locale temporaire
       setMessages(prev => prev.map(msg => 
         msg.id_message === selectedMessage.id_message 
           ? { 
               ...msg, 
               reactions: [
-                ...(msg.reactions || []),
-                { emoji, user_id: user?.id || '', user_name: user?.email || '' }
+                ...(msg.reactions || []).filter(r => r.user_id !== user.id),
+                { emoji, user_id: user.id, user_name: user.email || '' }
               ]
             }
           : msg
       ));
       
-      setMenuVisible(false);
+      setReactionModalVisible(false);
       setSelectedMessage(null);
     } catch (error) {
       console.error('Erreur ajout réaction:', error);
     }
+  };
+
+  const showContextMenu = (message: Message, event: any) => {
+    const { pageX, pageY } = event.nativeEvent;
+    setSelectedMessage(message);
+    setMenuPosition({ x: pageX, y: pageY });
+    setContextMenuVisible(true);
   };
 
   const deleteMessage = async () => {
@@ -307,7 +298,7 @@ const ChatScreen = () => {
     
     Alert.alert(
       'Supprimer le message',
-      'Êtes-vous sûr de vouloir supprimer ce message ?',
+      'Voulez-vous supprimer ce message ?',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -315,13 +306,8 @@ const ChatScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              // Appel à votre service pour supprimer
-              // await deleteMessageById(selectedMessage.id_message);
-              
-              // Suppression locale temporaire
               setMessages(prev => prev.filter(msg => msg.id_message !== selectedMessage.id_message));
-              
-              setMenuVisible(false);
+              setContextMenuVisible(false);
               setSelectedMessage(null);
             } catch (error) {
               console.error('Erreur suppression:', error);
@@ -332,89 +318,144 @@ const ChatScreen = () => {
     );
   };
 
-  const renderMessage = ({ item }: { item: Message }) => {
+  const renderMessage = ({ item, index }: { item: Message; index: number }) => {
     const isCurrentUser = item.id_expediteur === user?.id;
+    const nextMessage = messages[index + 1];
+    const prevMessage = messages[index - 1];
+    
+    const isFirstInGroup = !prevMessage || prevMessage.id_expediteur !== item.id_expediteur;
+    const isLastInGroup = !nextMessage || nextMessage.id_expediteur !== item.id_expediteur;
 
     return (
-      <View style={[
-        styles.messageContainer, 
-        // { justifyContent: isCurrentUser ? 'flex-end' : 'flex-start' },
-        { alignItems: isCurrentUser ? 'flex-end' : 'flex-start'}
-        
-        ]}>
-        <View
-          style={[
-            styles.messageBubble,
-            { 
-              backgroundColor: isCurrentUser ? '#DCF8C6' : 'white',
-              borderTopRightRadius: isCurrentUser ? 8 : 18,
-              borderTopLeftRadius: isCurrentUser ? 18 : 8,
-            },
-          ]}
-        >
-          {item.contenu && (
-            <Text style={[styles.messageText, { color: isCurrentUser ? '#000' : '#000' }]}>
-              {item.contenu}
-            </Text>
+      <View className={`px-4 ${isFirstInGroup ? 'mt-2' : 'mt-0.5'}`}>
+        <View className={`flex-row ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+          {/* Avatar pour les messages reçus */}
+          {!isCurrentUser && isLastInGroup && (
+            <View className="mr-2 mb-1">
+              {otherUser.photoProfil ? (
+                <Image
+                  source={{ uri: otherUser.photoProfil }}
+                  className="w-7 h-7 rounded-full"
+                />
+              ) : (
+                <UserIcon size={28} />
+              )}
+            </View>
           )}
-          {item.pieces_jointes && item.pieces_jointes.length > 0 && (
-            <View style={styles.attachmentContainer}>
-              {item.pieces_jointes.map((uri, index) => {
-                const isImage = uri.match(/\.(jpg|jpeg|png|gif)$/i);
-                const isAudio = uri.match(/\.(mp3|wav|ogg)$/i);
-                return (
-                  <View key={index} style={styles.attachmentItem}>
-                    {isImage ? (
-                      <Image source={{ uri }} style={styles.attachmentImage} />
-                    ) : isAudio ? (
-                      <Text style={[styles.attachmentText, { color: '#000' }]}>
-                        🎵 Fichier audio
-                      </Text>
-                    ) : (
-                      <Text style={[styles.attachmentText, { color: '#000' }]}>
-                        📄 {uri.split('/').pop()}
-                      </Text>
-                    )}
+          {!isCurrentUser && !isLastInGroup && (
+            <View className="w-7 mr-2" />
+          )}
+
+          <TouchableOpacity
+            onLongPress={(event) => handleLongPress(item, event)}
+            onPress={(event) => {
+              if (Platform.OS === 'android') {
+                showContextMenu(item, event);
+              }
+            }}
+            className={`max-w-[75%] relative ${
+              isCurrentUser 
+                ? 'bg-green-500' 
+                : 'bg-gray-100'
+            } ${
+              isFirstInGroup && isLastInGroup 
+                ? 'rounded-2xl' 
+                : isFirstInGroup 
+                  ? isCurrentUser 
+                    ? 'rounded-2xl rounded-br-md' 
+                    : 'rounded-2xl rounded-bl-md'
+                  : isLastInGroup 
+                    ? isCurrentUser 
+                      ? 'rounded-2xl rounded-tr-md' 
+                      : 'rounded-2xl rounded-tl-md'
+                    : isCurrentUser 
+                      ? 'rounded-2xl rounded-r-md' 
+                      : 'rounded-2xl rounded-l-md'
+            } px-3 py-2`}
+          >
+            {/* Contenu du message */}
+            {item.contenu && (
+              <Text className={`text-base leading-5 ${
+                isCurrentUser ? 'text-white' : 'text-gray-900'
+              }`}>
+                {item.contenu}
+              </Text>
+            )}
+
+            {/* Pièces jointes */}
+            {item.pieces_jointes && item.pieces_jointes.length > 0 && (
+              <View className="mt-2">
+                {item.pieces_jointes.map((uri, fileIndex) => {
+                  const isImage = uri.match(/\.(jpg|jpeg|png|gif)$/i);
+                  const isAudio = uri.match(/\.(mp3|wav|ogg)$/i);
+                  return (
+                    <View key={fileIndex} className="mb-2 last:mb-0">
+                      {isImage ? (
+                        <Image source={{ uri }} className="w-48 h-48 rounded-xl" />
+                      ) : isAudio ? (
+                        <View className="flex-row items-center p-3 bg-gray-50 rounded-xl">
+                          <Text className="text-2xl mr-2">🎵</Text>
+                          <Text className="text-gray-700 flex-1">Fichier audio</Text>
+                        </View>
+                      ) : (
+                        <View className="flex-row items-center p-3 bg-gray-50 rounded-xl">
+                          <Text className="text-2xl mr-2">📄</Text>
+                          <Text className="text-gray-700 flex-1" numberOfLines={1}>
+                            {uri.split('/').pop()}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* Réactions */}
+            {item.reactions && item.reactions.length > 0 && (
+              <View className="absolute -bottom-2 -right-1 flex-row">
+                {item.reactions.slice(0, 3).map((reaction, reactionIndex) => (
+                  <View 
+                    key={reactionIndex} 
+                    className="bg-white rounded-full w-6 h-6 items-center justify-center border border-gray-200 -ml-1 first:ml-0"
+                    style={{ zIndex: 3 - reactionIndex }}
+                  >
+                    <Text className="text-xs">{reaction.emoji}</Text>
                   </View>
-                );
-              })}
-            </View>
-          )}
+                ))}
+                {item.reactions.length > 3 && (
+                  <View className="bg-gray-200 rounded-full w-6 h-6 items-center justify-center -ml-1">
+                    <Text className="text-xs text-gray-600">+{item.reactions.length - 3}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
-          {/* Affichage des réactions */}
-          {item.reactions && item.reactions.length > 0 && (
-            <View style={styles.reactionsContainer}>
-              {item.reactions.map((reaction, index) => (
-                <View key={index} style={styles.reactionBubble}>
-                  <Text style={styles.reactionEmoji}>{reaction.emoji}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <View style={styles.messageFooter}>
-            <Text style={[styles.messageTime, { color: '#8E8E93' }]}>
+        {/* Timestamp (seulement pour le dernier message du groupe) */}
+        {isLastInGroup && (
+          <View className={`mt-1 ${isCurrentUser ? 'items-end' : 'items-start ml-9'}`}>
+            <Text className="text-xs text-gray-500">
               {new Date(item.date_envoi).toLocaleTimeString('fr-FR', {
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: false,
               })}
+              {isCurrentUser && (
+                <Text className="text-green-500 ml-1">✓</Text>
+              )}
             </Text>
-            {isCurrentUser && (
-              <Text style={[styles.messageStatus, { color: '#4FC3F7' }]}>✓✓</Text>
-            )}
           </View>
-        </View>
+        )}
       </View>
-      
     );
   };
 
   if (!convValid) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Conversation invalide ou introuvable.</Text>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-gray-500 text-lg">Conversation invalide ou introuvable.</Text>
         </View>
       </SafeAreaView>
     );
@@ -423,75 +464,68 @@ const ChatScreen = () => {
   if (error) {
     Alert.alert('Erreur', error, [
       { text: 'OK', onPress: () => setError(null) },
-      {
-        text: 'Réessayer',
-        onPress: () => handleSend(),
-        style: 'default',
-      },
     ]);
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Header WhatsApp Style */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <LucideArrowLeft color="white" size={24} />
+    <SafeAreaView className="flex-1 bg-white">
+      {/* Header  Messenger Style */}
+      <View className="bg-white border-b border-gray-200 px-4 py-3 flex-row items-center">
+        <TouchableOpacity onPress={() => router.back()} className="mr-3">
+          <LucideArrowLeft color="#22C55E" size={24} />
         </TouchableOpacity>
         
-        {/* Avatar de l'utilisateur */}
-        <View style={styles.avatarContainer}>
-          <Image
-            source={{ 
-              uri: otherUser.photoProfil || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.nom)}&background=${getAvatarColor(receiverId).substring(1)}&color=fff&size=40&font-size=0.6&rounded=true&bold=true`
-            }}
-            style={styles.avatar}
-          />
-          {otherUser.isOnline && <View style={styles.onlineIndicator} />}
+        <View className="relative mr-3">
+          {otherUser.photoProfil ? (
+            <Image
+              source={{ uri: otherUser.photoProfil }}
+              className="w-10 h-10 rounded-full"
+            />
+          ) : (
+            <UserIcon size={40} />
+          )}
+          {otherUser.isOnline && (
+            <View className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+          )}
         </View>
 
-        {/* Infos utilisateur */}
-        <TouchableOpacity style={styles.headerTextContainer} activeOpacity={0.7}>
-          <Text style={styles.headerTitle}>{otherUser.nom}</Text>
+        <TouchableOpacity className="flex-1" activeOpacity={0.7}>
+          <Text className="text-lg font-semibold text-gray-900">{otherUser.nom}</Text>
+          {otherUser.isOnline && (
+            <Text className="text-sm text-green-500">En ligne</Text>
+          )}
         </TouchableOpacity>
 
-        {/* Boutons d'action */}
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.actionButton}>
-            <LucidePhone color="white" size={22} />
+        <View className="flex-row items-center space-x-4">
+          <TouchableOpacity>
+            <LucidePhone color="#22C55E" size={24} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <LucideMoreVertical color="white" size={22} />
+          <TouchableOpacity>
+            <LucideVideo color="#22C55E" size={24} />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <LucideMoreVertical color="#22C55E" size={24} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 60 : 0}
-        style={styles.container}
-      > */}
-      <View style={[
-        styles.container,
-        Platform.OS === 'android' && keyboardHeight > 0 && { 
-          marginBottom: keyboardHeight - 330 
-        }
-      ]}>
-        {/* Messages List */}
+      {/* Messages List */}
+      <View className="flex-1 bg-white">
         <FlatList
           ref={flatListRef}
           data={messages}
           keyExtractor={(item: Message) => item.id_message}
           renderItem={renderMessage}
-          style={styles.messageList}
-          contentContainerStyle={[
-            styles.messageListContent,
-            // Ajustement dynamique selon le clavier
-            { paddingBottom: keyboardHeight > 0 ? 10 : 20 }
-          ]}
+          className="flex-1"
+          contentContainerStyle={{
+            paddingVertical: 12,
+            paddingBottom: keyboardHeight > 0 ? 10 : 20,
+            flexGrow: 1,
+            justifyContent: 'flex-end'
+          }}
           showsVerticalScrollIndicator={false}
           removeClippedSubviews={false}
-          initialNumToRender={15}
+          initialNumToRender={20}
           maxToRenderPerBatch={10}
           windowSize={10}
           onContentSizeChange={() => {
@@ -501,394 +535,189 @@ const ChatScreen = () => {
             flatListRef.current?.scrollToEnd({ animated: false });
           }}
         />
+      </View>
 
-        {/* Affichage des fichiers sélectionnés */}
-        {selectedFiles.length > 0 && (
-          <View style={styles.selectedFilesContainer}>
-            <Text style={styles.selectedFilesText}>
-              {selectedFiles.length} fichier(s) sélectionné(s)
-            </Text>
-            <TouchableOpacity onPress={() => setSelectedFiles([])}>
-              <Text style={styles.clearFilesText}>Effacer</Text>
+      {/* Fichiers sélectionnés */}
+      {selectedFiles.length > 0 && (
+        <View className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex-row justify-between items-center">
+          <Text className="text-gray-700 font-medium">
+            {selectedFiles.length} fichier(s) sélectionné(s)
+          </Text>
+          <TouchableOpacity onPress={() => setSelectedFiles([])}>
+            <Text className="text-green-500 font-semibold">Effacer</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Zone de saisie  Messenger Style */}
+      <View 
+        className="bg-white px-4 py-3 border-t border-gray-200"
+        style={{ 
+          paddingBottom: Platform.OS === 'android' && keyboardHeight > 0 
+            ? Math.max(12, keyboardHeight - 300) 
+            : 12 
+        }}
+      >
+        <View className="flex-row items-end space-x-2">
+          {/* Boutons d'action à gauche */}
+          <View className="flex-row space-x-2">
+            <TouchableOpacity className="w-8 h-8 items-center justify-center">
+              <LucideCamera color="#22C55E" size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleFilePick} className="w-8 h-8 items-center justify-center">
+              <LucideImage color="#22C55E" size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity className="w-8 h-8 items-center justify-center">
+              <LucideMic color="#22C55E" size={20} />
             </TouchableOpacity>
           </View>
-        )}
 
-        {/* Input Area avec gestion du clavier */}
-        <View style={[
-          styles.inputContainer,
-          // Pas de padding supplémentaire sur Android quand le clavier est fermé
-          Platform.OS === 'android' && keyboardHeight === 0 && { paddingBottom: 8 }
-        ]}>
-          <View style={styles.textInputContainer}>
+          {/* Zone de texte */}
+          <View className="flex-1 bg-gray-100 rounded-2xl px-4 py-2 max-h-32 min-h-10 justify-center">
             <TextInput
               value={input}
               onChangeText={setInput}
-              placeholder="Message"
+              placeholder="Tapez votre message..."
               placeholderTextColor="#8E8E93"
               multiline
-              style={styles.textInput}
+              className="text-base text-gray-900 min-h-6"
+              style={{ textAlignVertical: 'center' }}
               maxLength={1000}
+              onFocus={() => setIsTyping(true)}
+              onBlur={() => setIsTyping(false)}
             />
-            <TouchableOpacity onPress={handleFilePick} style={styles.attachmentButton}>
-              <Text style={styles.attachmentButtonText}>📎</Text>
-            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={handleSend}
-            disabled={!input.trim() && selectedFiles.length === 0}
-            style={[
-              styles.sendButton, 
-              { 
-                backgroundColor: input.trim() || selectedFiles.length > 0 ? '#25D366' : '#BDC3C7',
-                transform: input.trim() || selectedFiles.length > 0 ? [{ scale: 1 }] : [{ scale: 0.95 }]
-              }
-            ]}
-          >
-            <LucideSend color="white" size={20} />
-          </TouchableOpacity>
+
+          {/* Bouton d'envoi ou emoji */}
+          {input.trim() || selectedFiles.length > 0 ? (
+            <TouchableOpacity
+              onPress={handleSend}
+              className="w-8 h-8 items-center justify-center"
+            >
+              <LucideSend color="#22C55E" size={20} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity className="w-8 h-8 items-center justify-center">
+              <LucideSmile color="#22C55E" size={20} />
+            </TouchableOpacity>
+          )}
         </View>
-      {/* </KeyboardAvoidingView> */}
       </View>
 
-      {menuVisible && (
-      <>
-        {/* Overlay pour fermer le menu */}
-        <TouchableOpacity 
-          style={styles.menuOverlay}
-          activeOpacity={1}
+      {/* Modal des réactions */}
+      <Modal
+        visible={reactionModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setReactionModalVisible(false);
+          setSelectedMessage(null);
+        }}
+      >
+        <Pressable 
+          className="flex-1 bg-black/20 justify-center items-center"
           onPress={() => {
-            setMenuVisible(false);
+            setReactionModalVisible(false);
             setSelectedMessage(null);
           }}
-        />
-        
-        {/* Menu contextuel */}
-        <View style={[
-          styles.contextMenu,
-          {
-            left: Math.min(menuPosition.x - 100, Dimensions.get('window').width - 220),
-            top: Math.max(menuPosition.y - 100, 100),
-          }
-        ]}>
-          {/* Réactions rapides */}
-          <View style={styles.reactionsRow}>
-            {['❤️', '😂', '😮', '😢', '😡', '👍'].map((emoji) => (
-              <TouchableOpacity
-                key={emoji}
-                style={styles.reactionButton}
-                onPress={() => addReaction(emoji)}
-              >
-                <Text style={styles.reactionButtonText}>{emoji}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          
-          {/* Actions */}
-          <View style={styles.menuActions}>
-            {selectedMessage?.id_expediteur === user?.id && (
-              <TouchableOpacity 
-                style={styles.menuActionButton}
-                onPress={deleteMessage}
-              >
-                <Text style={[styles.menuActionText, { color: '#FF3B30' }]}>
-                  🗑️ Supprimer
-                </Text>
-              </TouchableOpacity>
-            )}
+        >
+          <View className="bg-white rounded-3xl p-4 mx-4 shadow-lg">
+            <View className="flex-row justify-around items-center space-x-4">
+              {['❤️', '😂', '😮', '😢', '😡', '👍'].map((emoji) => (
+                <TouchableOpacity
+                  key={emoji}
+                  onPress={() => addReaction(emoji)}
+                  className="w-12 h-12 items-center justify-center bg-gray-50 rounded-full"
+                  style={{ transform: [{ scale: 1.2 }] }}
+                >
+                  <Text className="text-2xl">{emoji}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             
+            {/* Actions supplémentaires */}
+            <View className="mt-4 pt-4 border-t border-gray-200">
+              <TouchableOpacity 
+                className="py-3 px-4 flex-row items-center"
+                onPress={() => {
+                  setReactionModalVisible(false);
+                  setContextMenuVisible(true);
+                }}
+              >
+                <Text className="text-gray-700 text-base font-medium">Plus d&apos;options</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Menu contextuel */}
+      <Modal
+        visible={contextMenuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setContextMenuVisible(false);
+          setSelectedMessage(null);
+        }}
+      >
+        <Pressable 
+          className="flex-1 bg-black/20 justify-center items-center"
+          onPress={() => {
+            setContextMenuVisible(false);
+            setSelectedMessage(null);
+          }}
+        >
+          <View className="bg-white rounded-xl mx-4 shadow-lg overflow-hidden">
             <TouchableOpacity 
-              style={styles.menuActionButton}
+              className="py-4 px-6 border-b border-gray-100 flex-row items-center"
               onPress={() => {
-                // Logique pour répondre au message
-                setMenuVisible(false);
+                // Logique pour répondre
+                setContextMenuVisible(false);
                 setSelectedMessage(null);
               }}
             >
-              <Text style={styles.menuActionText}>↩️ Répondre</Text>
+              <Text className="text-base text-gray-900 font-medium">Répondre</Text>
             </TouchableOpacity>
+            
+            <TouchableOpacity 
+              className="py-4 px-6 border-b border-gray-100 flex-row items-center"
+              onPress={() => {
+                // Logique pour copier
+                setContextMenuVisible(false);
+                setSelectedMessage(null);
+              }}
+            >
+              <Text className="text-base text-gray-900 font-medium">Copier</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              className="py-4 px-6 border-b border-gray-100 flex-row items-center"
+              onPress={() => {
+                // Logique pour transférer
+                setContextMenuVisible(false);
+                setSelectedMessage(null);
+              }}
+            >
+              <Text className="text-base text-gray-900 font-medium">Transférer</Text>
+            </TouchableOpacity>
+
+            {selectedMessage?.id_expediteur === user?.id && (
+              <TouchableOpacity 
+                className="py-4 px-6 flex-row items-center"
+                onPress={() => {
+                  setContextMenuVisible(false);
+                  deleteMessage();
+                }}
+              >
+                <Text className="text-base text-red-500 font-medium">Supprimer pour moi</Text>
+              </TouchableOpacity>
+            )}
           </View>
-        </View>
-      </>
-    )}
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: { 
-    flex: 1, 
-    backgroundColor: '#ECE5DD' // Couleur de fond WhatsApp
-  },
-  container: {
-    flex: 1,
-  },
-  header: {
-    backgroundColor: '#075E54', // Vert WhatsApp plus foncé
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  backButton: { 
-    marginRight: 8, 
-    padding: 8, 
-    marginLeft: -4 
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  onlineIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#25D366',
-    borderWidth: 2,
-    borderColor: '#075E54',
-  },
-  headerTextContainer: { 
-    flex: 1,
-    justifyContent: 'center',
-  },
-  headerTitle: { 
-    color: 'white', 
-    fontSize: 18, 
-    fontWeight: '600',
-    marginBottom: 1,
-  },
-  headerSubtitle: { 
-    color: 'rgba(255,255,255,0.8)', 
-    fontSize: 13,
-    fontWeight: '400',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionButton: {
-    padding: 8,
-    marginLeft: 4,
-  },
-  errorContainer: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
-  errorText: { 
-    color: '#8E8E93', 
-    fontSize: 18 
-  },
-  messageList: { 
-    flex: 1,
-    backgroundColor: '#ECE5DD',
-  },
-  messageListContent: { 
-    paddingVertical: 12, 
-    flexGrow: 1, 
-    justifyContent: 'flex-end',
-    paddingBottom: 20,
-  },
-  messageContainer: { 
-    flexDirection: 'row', 
-    marginVertical: 1, 
-    marginHorizontal: 8 
-  },
-  messageBubble: {
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    maxWidth: '85%',
-    minWidth: 60,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  messageText: { 
-    fontSize: 16, 
-    lineHeight: 22 
-  },
-  attachmentContainer: { 
-    marginTop: 6 
-  },
-  attachmentItem: { 
-    marginBottom: 6 
-  },
-  attachmentImage: { 
-    width: 200, 
-    height: 200, 
-    borderRadius: 8 
-  },
-  attachmentText: { 
-    fontSize: 14, 
-    marginTop: 2 
-  },
-  messageFooter: { 
-    flexDirection: 'row', 
-    justifyContent: 'flex-end', 
-    alignItems: 'center', 
-    marginTop: 4 
-  },
-  messageTime: { 
-    fontSize: 11, 
-    marginRight: 4 
-  },
-  messageStatus: { 
-    fontSize: 12 
-  },
-  selectedFilesContainer: {
-    backgroundColor: '#F0F0F0',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 0.5,
-    borderTopColor: '#E5E5E5',
-  },
-  selectedFilesText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  clearFilesText: {
-    fontSize: 14,
-    color: '#25D366',
-    fontWeight: '600',
-  },
-  inputContainer: {
-    backgroundColor: 'white',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    borderTopWidth: 0.5,
-    borderTopColor: '#E5E5E5',
-  },
-  textInputContainer: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
-    maxHeight: 120,
-    minHeight: 44,
-    justifyContent: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 16,
-    lineHeight: 20,
-    color: '#000',
-    paddingVertical: 0,
-    minHeight: 20,
-    textAlignVertical: 'center',
-  },
-  attachmentButton: { 
-    padding: 4,
-    marginLeft: 8,
-  },
-  attachmentButtonText: { 
-    fontSize: 20 
-  },
-  sendButton: {
-    borderRadius: 25,
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 0,
-  },
-  sendButtonText: {
-    fontSize: 18,
-  },
-  reactionsContainer: {
-    flexDirection: 'row',
-    marginTop: 4,
-    flexWrap: 'wrap',
-  },
-  reactionBubble: {
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginRight: 4,
-    marginTop: 2,
-  },
-  reactionEmoji: {
-    fontSize: 14,
-  },
-  menuOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    zIndex: 999,
-  },
-  contextMenu: {
-    position: 'absolute',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 1000,
-    minWidth: 200,
-  },
-  reactionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  reactionButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  reactionButtonText: {
-    fontSize: 20,
-  },
-  menuActions: {
-    paddingTop: 8,
-  },
-  menuActionButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  menuActionText: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-});
-
 export default ChatScreen;
-

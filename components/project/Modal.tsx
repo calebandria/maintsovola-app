@@ -7,6 +7,7 @@ import {
   type Investment,
   type ProjectJalon,
 } from "@/hooks/useProject";
+
 import { useState } from "react";
 import { 
   ActivityIndicator, 

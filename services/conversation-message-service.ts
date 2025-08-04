@@ -1,4 +1,4 @@
-import { supabase } from "~/lib/data";
+import { supabase } from "~/lib/supabase";
 import { Conversation, Message, Utilisateur } from "~/type/messageInterface";
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
@@ -332,7 +332,7 @@ export async function uploadFile(uri: string, fileName: string, contentType: str
       const buffer = decode(fileContent); // Convert base64 to ArrayBuffer
 
       // Upload to Supabase storage
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('pieces-jointes-envoyes')
         .upload(fileName, buffer, {
           contentType,
@@ -414,6 +414,7 @@ export async function sendMessage({
   }
 }
 
+
 // compte des messages non lus
 export const getUnreadMessagesCount = async (conversationId: number, userId: string): Promise<number> => {
     try {
@@ -434,6 +435,46 @@ export const getUnreadMessagesCount = async (conversationId: number, userId: str
         console.error('Error in getUnreadMessagesCount:', error);
         return 0;
     }
+};
+
+export const getCountUnreadMessages = async (userId: string): Promise<number> => {
+  try {
+      const { count, error } = await supabase
+          .from('message')
+          .select('*', { count: 'exact', head: true })
+          .eq('id_destinataire', userId)
+          .eq('lu', false);
+
+      if (error) {
+          console.error('Error getting unread messages count:', error);
+          return 0;
+      }
+
+      return count || 0;
+  } catch (error) {
+      console.error('Error in getUnreadMessagesCount:', error);
+      return 0;
+  }
+};
+
+export const getCountUnreadNotification = async (userId: string): Promise<number> => {
+  try {
+      const { count, error } = await supabase
+          .from('notification')
+          .select('*', { count: 'exact', head: true })
+          .eq('id_destinataire', userId)
+          .eq('lu', false);
+
+      if (error) {
+          console.error('Error getting unread notification count:', error);
+          return 0;
+      }
+
+      return count || 0;
+  } catch (error) {
+      console.error('Error in getUnreadMessagesCount:', error);
+      return 0;
+  }
 };
 
 // Fonction pour marquer les messages comme lus

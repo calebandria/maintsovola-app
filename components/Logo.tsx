@@ -1,5 +1,5 @@
 // components/Logo.tsx
-import { images } from '@/constants/constants';
+import { images } from '~/constants/constants';
 import { Image, Text, View } from 'react-native';
 
 interface LogoProps {
