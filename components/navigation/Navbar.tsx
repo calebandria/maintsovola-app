@@ -26,7 +26,7 @@ import {
   LucideUserCircle, 
 } from "lucide-react-native"
 import { useAuth } from "~/contexts/AuthContext";
-import { getCountUnreadMessages, getUser} from "~/services/conversation-message-service";
+import { getUnreadMessagesCount, getUser} from "~/services/conversation-message-service";
 
 interface NavItem {
   name: string
@@ -63,7 +63,8 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
   const fetchUnreadMessagesCount = useCallback(async () => {
     if (!userId) return;
     try {
-      const count = await getCountUnreadMessages(userId);
+      const count = 0;
+      //const count = await getUnreadMessagesCount(userId);
       setMessagesCount(count);
     } catch (error) {
       console.error("Error fetching unread messages count:", error);
