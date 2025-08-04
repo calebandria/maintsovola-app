@@ -103,10 +103,11 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ projectId, userId, is
         </View>
       </View>
 
-      {/* Replies */}
-      {comments
-        .filter((reply) => reply.id_parent_commentaire === comment.id_commentaire)
-        .map((reply) => renderComment(reply, true))}
+      {/* Replies - only show if this is not already a reply to avoid deep nesting */}
+      {!isReply &&
+        comments
+          .filter((reply) => reply.id_parent_commentaire === comment.id_commentaire)
+          .map((reply) => renderComment(reply, true))}
     </View>
   );
 
@@ -125,7 +126,11 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ projectId, userId, is
           <Text className="mt-2 text-sm text-gray-500">Chargement des commentaires...</Text>
         </View>
       ) : (
-        <ScrollView className="mb-4 max-h-96" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          className="mb-4"
+          style={{ maxHeight: 400 }}
+          showsVerticalScrollIndicator={true}
+          nestedScrollEnabled={true}>
           {comments
             .filter((comment) => !comment.id_parent_commentaire) // Only root comments
             .map((comment) => renderComment(comment))}
