@@ -194,7 +194,7 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
                 variant="ghost"
                 size="icon"
                 onPress={() => onViewDetails(item)}
-                title={<MaterialCommunityIcons name="eye-outline" size={20} color="white" />}
+                title={<MaterialCommunityIcons name="eye-outline" size={20} color="#0ea5e6" />}
               />
             )}
             {onEdit && (
@@ -202,7 +202,7 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
                 variant="ghost"
                 size="icon"
                 onPress={() => onEdit(item)}
-                title={<FontAwesome6 name="edit" size={18} color="white" />}
+                title={<FontAwesome6 name="edit" size={18} color="#193B2D" />}
               />
             )}
             {onDelete && (
@@ -210,7 +210,7 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
                 variant="ghost"
                 size="icon"
                 onPress={() => onDelete(item)}
-                title={<Feather name="trash-2" size={20} color="white" />}
+                title={<Feather name="trash-2" size={20} color="#9c2222a2" />}
               />
             )}
             {onValidate && (userRole === 'superviseur' || userRole === 'technicien') && (
@@ -219,7 +219,7 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
                 size="icon"
                 onPress={() => onValidate(item)}
                 title={
-                  <MaterialCommunityIcons name="check-circle-outline" size={20} color="white" />
+                  <MaterialCommunityIcons name="check-circle-outline" size={20} color="#193B2D" />
                 }
               />
             )}
@@ -228,7 +228,7 @@ const TerrainTable: React.FC<TerrainTableProps> = ({
                 variant="ghost"
                 size="icon"
                 onPress={() => onContactTechnicien(item)}
-                title={<MaterialCommunityIcons name="message-outline" size={20} color="white" />}
+                title={<MaterialCommunityIcons name="message-outline" size={20} color="#193B2D" />}
               />
             )}
           </View>
@@ -366,7 +366,9 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#2B9A66',
+    // backgroundColor: '#2B9A66',
+        backgroundColor: '#F4FBF6',
+
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
@@ -383,7 +385,7 @@ const styles = StyleSheet.create({
   terrainName: {
     fontWeight: 'bold',
     fontSize: 14,
-    color: 'white',
+    color: '#193B2D',
     paddingLeft: 10,
   },
   ownerText: {
