@@ -2,16 +2,16 @@
 // import { useForm } from "react-hook-form";
 // import { yupResolver } from "@hookform/resolvers/yup";
 // import * as yup from "yup";
-// import { Button } from "@/components/ui/button";
-// import { Form } from "@/components/ui/form";
-// import { supabase } from "@/integrations/supabase/client";
-// import { TerrainFormData, convertFormDataToTerrainData } from "@/types/terrainForm";
-// import { TerrainData } from "@/types/terrain";
+// import { Button } from "~/components/ui/button";
+// import { Form } from "~/components/ui/form";
+// import { supabase } from "~/integrations/supabase/client";
+// import { TerrainFormData, convertFormDataToTerrainData } from "~/types/terrainForm";
+// import { TerrainData } from "~/types/terrain";
 // import { Loader2 } from "lucide-react";
 // import { toast } from "sonner";
 // import ValidationForm from "./ValidationForm";
-// import TerrainFormFields from "@/components/terrain/TerrainFormFields";
-// import { sendNotification } from "@/types/notification";
+// import TerrainFormFields from "~/components/terrain/TerrainFormFields";
+// import { sendNotification } from "~/types/notification";
 
 // interface TerrainFormProps {
 //   initialData?: TerrainData;

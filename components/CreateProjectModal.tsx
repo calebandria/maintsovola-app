@@ -12,6 +12,7 @@ import {
   BackHandler,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+
 import { launchImageLibraryAsync } from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { CultureData } from '@/types/cultureData';
@@ -22,6 +23,7 @@ import { MapPlus } from 'lucide-react-native';
 import { router } from 'expo-router';
 // Remplacer uuid par une fonction simple
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
+
 
 function daysBetween(dateA?: string, dateB?: string): number {
   if (!dateA || !dateB) return 0;

@@ -9,6 +9,7 @@ import {
 import { Conversation } from "~/type/messageInterface";
 import { useAuth } from '~/contexts/AuthContext';
 import { getLastMessage, getUsername, getUser, getUnreadMessagesCount } from '~/services/conversation-message-service'; 
+import { useHideNavbar } from '~/contexts/NavContext';
 
 interface RenderConversationProps {
   item: Conversation;
@@ -21,20 +22,22 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
   const otherUserId = item.id_utilisateur1 === userId ? item.id_utilisateur2 : item.id_utilisateur1;
   const [otherUsername, setOtherUsername] = useState<string>('Utilisateur');
   const [lastMesage, setLastMessage] = useState<string>();
-  const [photoProfil, setPhotoProfil] = useState<string>();
+  const [photoProfil, setPhotoProfil] = useState<string>('');
   const [unreadCount, setUnreadCount] = useState<number>(0);
-
+  useHideNavbar(); // Utilisation du hook pour cacher la navbar
+  
   useEffect(() => {
     const fetchUsername = async () => {
-      const { username, photo_profil} = await getUser({id: otherUserId});
+      const { username, photo_profil } = await getUser({id: otherUserId});
 
       const cleanedUsername = username 
         ? username.replace(/\bnull\b/gi, '').trim().replace(/\s+/g, ' ')
         : 'Utilisateur';
       
-      setPhotoProfil(photo_profil);
+      setPhotoProfil(photo_profil || '');
       setOtherUsername(cleanedUsername || 'Utilisateur');
       console.log("Fetched username:", JSON.stringify(username, null, 2));
+      console.log("Photo profil:", photo_profil);
       if (!username) {
         console.warn("Username not found for user ID:", otherUserId);
       }
@@ -60,26 +63,27 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
     }
   }, [item.id_conversation, userId]);
 
-  // Fonction pour formater le temps comme WhatsApp
+  // Fonction pour formater le temps comme WhatsApp/Facebook
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60);
     
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('fr-FR', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      });
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.abs(now.getTime() - date.getTime()) / (1000 * 60);
+      if (diffInMinutes < 1) {
+        return 'maintenant';
+      }
+      return `${Math.floor(diffInMinutes)}min`;
+    } else if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)}h`;
     } else if (diffInHours < 168) {
-      const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+      const days = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
       return days[date.getDay()];
     } else {
       return date.toLocaleDateString('fr-FR', { 
         day: '2-digit', 
-        month: '2-digit',
-        year: '2-digit'
+        month: '2-digit'
       });
     }
   };
@@ -99,11 +103,9 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
     loadLastMessage();
   }, [loadLastMessage]);
 
-  // Couleurs d'avatar aléatoires pour chaque utilisateur
-  const getAvatarColor = (userId: string) => {
-    const colors = ['#25D366', '#34B7F1', '#FF6B6B', '#4ECDC4', '#9B59B6', '#F39C12', '#E74C3C', '#27AE60'];
-    const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-    return colors[index];
+  // Couleur d'icône par défaut
+  const getIconColor = () => {
+    return '#8E8E93'; // Gris comme les icônes par défaut
   };
 
   return (
@@ -113,58 +115,87 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
       style={{
         paddingHorizontal: 16,
         paddingVertical: 12,
-        borderBottomWidth: 0.5,
-        borderBottomColor: '#E5E5E5'
+        borderBottomWidth: 0,
       }}
     >
-      {/* Avatar */}
+      {/* Avatar avec photo ou icône par défaut */}
       <View className="relative mr-3">
         <View 
-          className="w-14 h-14 rounded-full bg-gray-300 items-center justify-center overflow-hidden"
-          style={{ backgroundColor: getAvatarColor(otherUserId) }}
+          className="w-14 h-14 rounded-full items-center justify-center overflow-hidden"
+          style={{ 
+            backgroundColor: '#E5E5E5'
+          }}
         >
-          <Image
-            source={{ 
-              uri: `${photoProfil !== '' ? photoProfil : `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUsername)}&background=${getAvatarColor(otherUserId).substring(1)}&color=fff&size=56&font-size=0.6&rounded=true&bold=true`}` 
-            }}
-            className="w-full h-full"
-            style={{ borderRadius: 28 }}
-            onError={() => {
-              console.warn("Avatar loading failed for:", otherUsername);
-            }}
-          />
+          {photoProfil && photoProfil.trim() !== '' ? (
+            // Afficher la photo de profil si elle existe
+            <Image
+              source={{ uri: photoProfil }}
+              className="w-full h-full"
+              style={{ borderRadius: 28 }}
+              onError={() => {
+                console.warn("Avatar loading failed for:", otherUsername);
+                setPhotoProfil(''); // Fallback vers l'icône
+              }}
+            />
+          ) : (
+            // Afficher l'icône par défaut si pas de photo
+            <View style={{ width: 28, height: 28 }}>
+              <View 
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: getIconColor(),
+                  alignSelf: 'center',
+                  marginBottom: 2
+                }}
+              />
+              <View 
+                style={{
+                  width: 20,
+                  height: 14,
+                  borderRadius: 10,
+                  backgroundColor: getIconColor(),
+                  alignSelf: 'center'
+                }}
+              />
+            </View>
+          )}
         </View>
         
-        {/* Indicateur en ligne*/}
+        {/* Indicateur en ligne - style Facebook (petit point vert) */}
         <View 
-          className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"
-          style={{ display: 'none' }}
+          className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 rounded-full border border-white"
+          style={{ 
+            backgroundColor: '#42B883',
+            display: Math.random() > 0.5 ? 'flex' : 'none' // Simulation aléatoire
+          }}
         />
       </View>
 
-      {/* Contenu principal */}
+      {/* Contenu principal - Style Facebook */}
       <View className="flex-1 justify-center">
         {/* Ligne supérieure : Nom + Heure */}
         <View className="flex-row items-center justify-between mb-1">
-          {/* Nom avec style conditionnel */}
           <Text 
-            className="text-gray-900 font-medium text-base flex-1"
+            className="text-gray-900 flex-1"
             numberOfLines={1}
             style={{ 
               fontSize: 16, 
-              fontWeight: unreadCount > 0 ? 'bold' : '500'
+              fontWeight: unreadCount > 0 ? '600' : '400',
+              color: '#050505'
             }}
           >
             {otherUsername}
           </Text>
           
-          {/* Heure de la dernière activité */}
+          {/* Heure - style Facebook */}
           <Text 
-            className="text-gray-500 text-xs ml-2"
+            className="ml-2"
             style={{ 
-              fontSize: 12, 
-              color: unreadCount > 0 ? '#25D366' : '#8E8E93',
-              fontWeight: unreadCount > 0 ? 'bold' : 'normal'
+              fontSize: 13, 
+              color: unreadCount > 0 ? '#22C55E' : '#65676B',
+              fontWeight: unreadCount > 0 ? '500' : '400'
             }}
           >
             {formatTime(item.derniere_activite)}
@@ -174,30 +205,37 @@ const RenderConversation: React.FC<RenderConversationProps> = ({ item, onPress }
         {/* Ligne inférieure : Dernier message + Badge */}
         <View className="flex-row items-center justify-between">
           <Text 
-            className="text-gray-600 text-sm flex-1"
+            className="flex-1"
             numberOfLines={1}
             style={{ 
               fontSize: 14, 
-              color: unreadCount > 0 ? '#1F2937' : '#8E8E93',
-              fontWeight: unreadCount > 0 ? '600' : 'normal'
+              color: unreadCount > 0 ? '#050505' : '#65676B',
+              fontWeight: unreadCount > 0 ? '500' : '400'
             }}
           >
-            {lastMesage} 
+            {lastMesage || 'Aucun message'} 
           </Text>
           
-          {/* Badge de messages non lus */}
+          {/* Badge de messages non lus - style Facebook */}
           {unreadCount > 0 && (
             <View 
-              className="bg-green-500 rounded-full px-2 py-1 ml-2"
+              className="rounded-full ml-2"
               style={{ 
-                backgroundColor: '#25D366',
-                minWidth: 20,
-                height: 20,
+                backgroundColor: '#22C55E',
+                minWidth: 18,
+                height: 18,
                 justifyContent: 'center',
                 alignItems: 'center',
+                paddingHorizontal: unreadCount > 9 ? 6 : 0,
               }}
             >
-              <Text className="text-white text-xs font-medium" style={{ fontSize: 12 }}>
+              <Text 
+                style={{ 
+                  color: 'white', 
+                  fontSize: 11, 
+                  fontWeight: 'bold' 
+                }}
+              >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </Text>
             </View>

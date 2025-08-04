@@ -1,0 +1,1 @@
+export type HeaderType = 'home' | 'tabs' | 'profile' | 'hidden';
