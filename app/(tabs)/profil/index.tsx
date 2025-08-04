@@ -37,7 +37,7 @@ export default function UserLayout() {
             projectsCount={projectsCount}
             onFollowToggle={handleFollowToggle}
           />
-          <ProfileTabs />
+          <ProfileTabs isCurrentUser={true} id={user?.id as string} />
         </ScrollView>
       ) : (
         <View className="flex-1 justify-center items-center">

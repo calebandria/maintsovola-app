@@ -1,11 +1,4 @@
-<<<<<<< HEAD
 import { supabase } from '~/lib/supabase';
-=======
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '~/lib/data';
-
-// Configuration du client Supabase avec les mmes paramètres que AuthContext
->>>>>>> 9b8ef07 (fix: adding new features in project dashboard and dealing with createclient issue)
 
 type Utilisateur = {
   id_utilisateur: number;

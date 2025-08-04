@@ -5,13 +5,19 @@ import Projets from '../Navigation/Projets';
 import Paiement from '../Navigation/Paiement';
 import Activity from '../Navigation/Activity';
 import { MaterialIcons, FontAwesome, Feather } from '@expo/vector-icons';
-import { useFetchUserRoleByID } from '~/hooks/useFetchUserRoleByID'
-import ParcellesTechnicien from "../Navigation/technicien/ParcellesTechnicien";
+import { useFetchUserRoleByID } from '~/hooks/useFetchUserRoleByID';
+import ParcellesTechnicien  from "../Navigation/technicien/ParcellesTechnicien";
 import EffectuesTechnicien from "../Navigation/technicien/EffectuesTechnicien";
 import RessourcesTechnicien from "../Navigation/technicien/RessourcesTechnicien";
 import PaiementsTechnicien from '../Navigation/technicien/PaiementsTechnicien';
 import PlanningTechnicien from '../Navigation/technicien/PlanningTechnicien';
 
+import VueEnsembleSuperviseur from '../Navigation/superviseur/VueEnsembleSuperviseur';
+import TechnicienSuperviseur from '../Navigation/superviseur/TechnicienSuperviseur';
+import LogistiqueSuperviseur from '../Navigation/superviseur/LogistiqueSuperviseur'
+import CarteSuperviseur from '../Navigation/superviseur/CarteSuperviseur';
+import AlerteSuperviseur from '../Navigation/superviseur/AlerteSuperviseur';
+import ProjetSuperviseur from '../Navigation/superviseur/ProjetSuperviseur';
 export default function ProfileTabs({
   isCurrentUser,
   id
@@ -43,68 +49,68 @@ export default function ProfileTabs({
   ];
 
 
-  let tabsTechnicien = [
-    {
-      label: 'Parcelles',
-      icon: (color: string) => <FontAwesome name="map" size={20} color={color} />,
-      component: (props: any) => <ParcellesTechnicien userRole={userRole} userId={id} {...props} />,
-    },
-    {
-      label: 'Planning',
-      icon: (color: string) => <MaterialIcons name="calendar-today" size={20} color={color} />,
-      component: (props: any) => <PlanningTechnicien userRole={userRole} userId={id} {...props} />,
-    },
-    {
-      label: 'Effectués',
-      icon: (color: string) => <Feather name="check-circle" size={20} color={color} />,
-      component: (props: any) => <EffectuesTechnicien userRole={userRole} userId={id} {...props} />,
-    },
-    {
-      label: 'Ressources',
-      icon: (color: string) => <MaterialIcons name="inventory" size={20} color={color} />,
-      component: (props: any) => <RessourcesTechnicien userRole={userRole} userId={id} {...props} />,
-    },
-    {
-      label: 'Paiements',
-      icon: (color: string) => <FontAwesome name="credit-card" size={20} color={color} />,
-      component: (props: any) => <PaiementsTechnicien userRole={userRole} userId={id} {...props} />,
-    },
+let tabsTechnicien = [
+  {
+    label: 'Parcelles',
+    icon: (color: string) => <FontAwesome name="map" size={20} color={color} />,
+    component: (props: any) => <ParcellesTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+  {
+    label: 'Planning',
+    icon: (color: string) => <MaterialIcons name="calendar-today" size={20} color={color} />,
+    component: (props: any) => <PlanningTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+  {
+    label: 'Effectués',
+    icon: (color: string) => <Feather name="check-circle" size={20} color={color} />,
+    component: (props: any) => <EffectuesTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+  {
+    label: 'Ressources',
+    icon: (color: string) => <MaterialIcons name="inventory" size={20} color={color} />,
+    component: (props: any) => <RessourcesTechnicien userRole={userRole} userId={id} {...props} />,
+  },
+  {
+    label: 'Paiements',
+    icon: (color: string) => <FontAwesome name="credit-card" size={20} color={color} />,
+    component: (props: any) => <PaiementsTechnicien userRole={userRole} userId={id} {...props} />,
+  },
 
-  ];
+];
 
-  // Onglets spécifiques pour les superviseurs
-  const tabsSuperviseur = [
-    {
-      label: 'Vue',
-      icon: (color: string) => <MaterialIcons name="dashboard" size={20} color={color} />,
-      component: VueEnsembleSuperviseur,
-    },
-    {
-      label: 'Techniciens',
-      icon: (color: string) => <MaterialIcons name="supervisor-account" size={20} color={color} />,
-      component: TechnicienSuperviseur,
-    },
-    {
-      label: 'Logistique',
-      icon: (color: string) => <MaterialIcons name="local-shipping" size={20} color={color} />,
-      component: LogistiqueSuperviseur,
-    },
-    {
-      label: 'Projets',
-      icon: (color: string) => <MaterialIcons name="show-chart" size={20} color={color} />,
-      component: ProjetSuperviseur,
-    },
-    {
-      label: 'Carte',
-      icon: (color: string) => <MaterialIcons name="map" size={20} color={color} />,
-      component: CarteSuperviseur,
-    },
-    {
-      label: 'Alertes',
-      icon: (color: string) => <MaterialIcons name="warning" size={20} color={color} />,
-      component: AlerteSuperviseur,
-    }
-  ];
+// Onglets spécifiques pour les superviseurs
+const tabsSuperviseur = [
+  {
+    label: 'Vue',
+    icon: (color: string) => <MaterialIcons name="dashboard" size={20} color={color} />,
+    component: VueEnsembleSuperviseur,
+  },
+  {
+    label: 'Techniciens',
+    icon: (color: string) => <MaterialIcons name="supervisor-account" size={20} color={color} />,
+    component: TechnicienSuperviseur,
+  },
+  {
+    label: 'Logistique',
+    icon: (color: string) => <MaterialIcons name="local-shipping" size={20} color={color} />,
+    component: LogistiqueSuperviseur,
+  },
+  {
+    label: 'Projets',
+    icon: (color: string) => <MaterialIcons name="show-chart" size={20} color={color} />,
+    component: ProjetSuperviseur,
+  },
+  {
+    label: 'Carte',
+    icon: (color: string) => <MaterialIcons name="map" size={20} color={color} />,
+    component: CarteSuperviseur,
+  },
+  {
+    label: 'Alertes',
+    icon: (color: string) => <MaterialIcons name="warning" size={20} color={color} />,
+    component: AlerteSuperviseur,
+  }
+];
 
 
   const [activeTab, setActiveTab] = useState(0);
@@ -141,7 +147,7 @@ export default function ProfileTabs({
   }
 
   console.log("userRole : ", userRole);
-
+  
   const ActiveComponent = tabProfile[activeTab].component;
   return (
     <View className="flex-1 bg-white">
