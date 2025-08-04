@@ -268,13 +268,13 @@ const Messages: React.FC<MessengerScreenProps> = ({ activeConversation, onBack }
                 const isSupport = name.includes("support");
 
                 const borderLbColor = isAdmin
-                ? "border-bl-blue-500"
+                ? "border-bl-green-500"
                 : isSupport
                 ? "border-bl-red-500"
                 : "border-bl-green-500";
 
                 const shadowColor = isAdmin
-                ? "shadow-blue-300"
+                ? "shadow-green-300"
                 : isSupport
                 ? "shadow-red-300"
                 : "shadow-green-300";
@@ -283,7 +283,7 @@ const Messages: React.FC<MessengerScreenProps> = ({ activeConversation, onBack }
               key={conversation.id}
               onPress={() => setSelectedConversation(conversation)}
               className={`flex-row items-center px-4 py-3  active:bg-gray-50 p-2
-               shadow-sm mb-1 rounded-tl-lg rounded-br-lg ${(conversation.name.toLowerCase().includes("admin") ? "shadow-b-blue-600" : conversation.name.toLowerCase().includes("support")) ? "shadow-red-700" : "border-green-500"}`}
+               shadow-sm mb-1 rounded-tl-lg rounded-br-lg ${(conversation.name.toLowerCase().includes("admin") ? "shadow-b-green-600" : conversation.name.toLowerCase().includes("support")) ? "shadow-red-700" : "border-green-500"}`}
               activeOpacity={0.8}
             >
               {/* Avatar */}
@@ -433,7 +433,7 @@ const Messages: React.FC<MessengerScreenProps> = ({ activeConversation, onBack }
                     <MaterialIcons
                       name={message.isRead ? "done-all" : "done"}
                       size={14}
-                      color={message.isRead ? "#1877F2" : "#8A8D91"}
+                      color={message.isRead ? "#4CAF50" : "#8A8D91"}
                     />
                   </View>
                 )}
@@ -447,13 +447,13 @@ const Messages: React.FC<MessengerScreenProps> = ({ activeConversation, onBack }
       <View className="bg-white border-t border-gray-200 px-4 py-3">
         <View className="flex-row items-end">
           <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center mr-2">
-            <MaterialIcons name="add" size={24} color="#1877F2" />
+            <MaterialIcons name="add" size={24} color="#4CAF50" />
           </TouchableOpacity>
           <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center mr-2">
-            <MaterialIcons name="camera-alt" size={20} color="#1877F2" />
+            <MaterialIcons name="camera-alt" size={20} color="#4CAF50" />
           </TouchableOpacity>
           <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center mr-2">
-            <MaterialIcons name="image" size={20} color="#1877F2" />
+            <MaterialIcons name="image" size={20} color="#4CAF50" />
           </TouchableOpacity>
           <View className="flex-1 flex-row items-end bg-gray-100 rounded-full px-4 py-2 mr-2">
             <TextInput
@@ -466,7 +466,7 @@ const Messages: React.FC<MessengerScreenProps> = ({ activeConversation, onBack }
               style={{ fontSize: 15, maxHeight: 100 }}
             />
             <TouchableOpacity className="ml-2">
-              <MaterialIcons name="emoji-emotions" size={20} color="#1877F2" />
+              <MaterialIcons name="emoji-emotions" size={20} color="#4CAF50" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity

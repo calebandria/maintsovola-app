@@ -1,15 +1,15 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { UseFormReturn, useFormContext } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/terrain/form";
-import { Input } from "@/components/ui/terrain/input";
-import { Textarea } from "@/components/ui/terrain/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/terrain/radio-group";
-import { Label } from "@/components/ui/terrain/label";
-import { Button } from "@/components/ui/terrain/Button";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "components/ui/terrain/form";
+import { Input } from "components/ui/terrain/input";
+import { Textarea } from "components/ui/terrain/textarea";
+import { RadioGroup, RadioGroupItem } from "components/ui/terrain/radio-group";
+import { Label } from "components/ui/terrain/label";
+import { Button } from "components/ui/terrain/Button";
 import * as ImagePicker from 'expo-image-picker'
 import { MaterialIcons } from '@expo/vector-icons';
-import { TerrainData } from "@/types/terrain";
+import { TerrainData } from "types/terrain";
 import { useEffect } from "react";
 
 interface ValidationFormProps {

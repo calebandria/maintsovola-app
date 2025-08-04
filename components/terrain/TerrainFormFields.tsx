@@ -11,10 +11,10 @@ import {
 import { Button } from 'react-native-paper';
 //import { Button } from '@/components/ui/button';
 // import { Select, SelectItem } from '@/components/ui/terrain/select';
-import { Checkbox } from '@/components/ui/terrain/checkbox';
+import { Checkbox } from 'components/ui/terrain/checkbox';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from 'integrations/supabase/client';
 import { useFormContext } from 'react-hook-form';
 import RNPickerSelect from 'react-native-picker-select';
 import TerrainMap from './TerrainMap';

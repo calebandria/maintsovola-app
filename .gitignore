@@ -16,6 +16,8 @@ expo-env.d.ts
 # firebase/supabase/vexo
 .env
 
+pnpm-lock.yaml
+pnpm-lock2.yaml
 #copy
 *copy.*
 
@@ -36,3 +38,9 @@ lerna-debug.log
 
 
 comptes.txt
+
+#Package log
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+lerna-debug.log

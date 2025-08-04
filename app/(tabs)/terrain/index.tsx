@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#218358',
-    width: '50%',
+    width: '45%',
   },
   button: {
     flexDirection: 'row',

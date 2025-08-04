@@ -1,4 +1,4 @@
-import { supabase } from '~/utils/supabase';
+import { supabase } from '~/lib/supabase';
 
 type Utilisateur = {
   id_utilisateur: number;

@@ -4,6 +4,7 @@ import { CultureDetail } from './types';
 import { formatCurrency, calculateRevenue } from './utils';
 import MetricCard from './MetricCard';
 import ProductionDetails from './ProductionDetails';
+import { Ionicons } from '@expo/vector-icons';
 
 interface CultureSectionProps {
   detail: CultureDetail;
@@ -25,8 +26,10 @@ const CultureSection: React.FC<CultureSectionProps> = ({ detail, index, totalCul
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Culture Header */}
         <View className="mb-6 items-center">
-          <View className="mb-2 flex-row items-center">
-            <View className="mr-3 h-4 w-4 rounded-full bg-green-500" />
+          <View className="mb-2 flex-row items-center gap-2">
+            {/* <View className="w-4 h-4 mr-3 bg-green-500 rounded-full" /> */}
+            <Ionicons name="leaf" size={24} color="#16A34A" />
+
             <Text className="text-xl font-bold text-gray-900">{cultureName}</Text>
           </View>
           <Text className="text-sm text-gray-500">

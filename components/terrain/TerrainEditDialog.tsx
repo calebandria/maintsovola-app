@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Button } from '../ui/terrain/Button';
-import { TerrainData } from '@/types/terrain';
-import { supabase } from '@/integrations/supabase/client';
+import { TerrainData } from 'types/terrain';
+import { supabase } from 'integrations/supabase/client';
 import { useToast } from '../ui/terrain/use-toast';
 import TerrainForm from './TerrainForm';
 import { Entypo } from '@expo/vector-icons';

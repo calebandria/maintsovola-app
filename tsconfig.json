@@ -7,11 +7,10 @@
     "typeRoots": ["./node_modules/@types", "./types"],
     "paths": {
       "~/*": [
-        "./*"
-        // "@/*": [
-        //   "./*"
-      ],
-      "@/*": ["./*"]
+        "*"
+      // "@/*": [
+      //   "./*"
+      ]
     }
   },
   "include": [
@@ -20,6 +19,7 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-    // "components/navigation/TopNavbar.js"
-  ]
+, 
+// "components/navigation/TopNavbar.js"  
+]
 }

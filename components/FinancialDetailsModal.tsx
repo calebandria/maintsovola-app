@@ -1,5 +1,5 @@
 import React from 'react';
-import { FinancialDetailsModal as RefactoredModal } from './financialDetails';
+import { FinancialDetailsModal as RefactoredModal } from './feed/financialDetails';
 import { AgriculturalProject } from '~/hooks/use-project-data';
 
 // Legacy interface for backward compatibility
