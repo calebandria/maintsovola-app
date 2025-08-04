@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { supabase } from '@/utils/supabase';
+import { supabase } from '@/lib/supabase';
 import { JalonData } from '@/types/jalonData';
 import { CultureData } from '@/types/cultureData';
 
@@ -17,7 +17,7 @@ const ProjectMilestones = ({ projectId }:{projectId: number}) => {
         .eq('projet_id', projectId)
         .order('ordre');
 
-      const { data: cultureData } = await supabase.from('culture').select('id, nom');
+      const { data: cultureData } = await supabase.from('culture').select('*');
 
       if (jalonData) setJalons(jalonData);
       if (cultureData) setCultures(cultureData);
@@ -26,8 +26,8 @@ const ProjectMilestones = ({ projectId }:{projectId: number}) => {
   }, [projectId]);
 
   const getCultureName = (cultureId : number) => {
-    const culture = cultures.find(c => c.id === cultureId);
-    return culture ? culture.nom : 'Culture inconnue';
+    const culture = cultures.find(c => c.id_culture === cultureId);
+    return culture ? culture.nom_culture : 'Culture inconnue';
   };
 
   const markAsDone = async (jalonId: number) => {

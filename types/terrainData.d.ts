@@ -1,5 +1,5 @@
 export interface TerrainData {
-    id: number;
+    id_terrain: number;
     surface_proposee: number;
     surface_validee: number;
     acces_eau: boolean;
