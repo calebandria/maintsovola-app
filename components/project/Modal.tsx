@@ -6,7 +6,7 @@ import {
   completeProject,
   type Investment,
   type ProjectJalon,
-} from "@/hooks/useProject";
+} from "hooks/useProject";
 
 import { useState } from "react";
 import { 
@@ -24,7 +24,7 @@ import {
 import { ProjectMilestonesModal } from "../ProjectMilestones";
 import { supabase } from "~/lib/supabase";
 import { ProjectData } from "~/type/projectInterface";
-import { useProjectData } from "@/hooks/useProject";
+import { useProjectData } from "hooks/useProject";
 import CreateProjectModal from "../CreateProjectModal";
 
 const formatDate = (dateStr: string) =>

@@ -11,13 +11,12 @@ import {
   Alert,
   Image,
   Keyboard,
-  Dimensions,
   Modal,
   Pressable
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getConversationById, getMessages, sendMessage, subscribeToMessages, uploadFile, getUser } from '~/services/conversation-message-service';
-import { Conversation, Message, Utilisateur } from '~/type/messageInterface';
+import { Conversation, Message } from '~/type/messageInterface';
 import { useAuth } from '~/contexts/AuthContext';
 import { LucideArrowLeft, LucidePhone, LucideVideo, LucideMoreVertical, LucideSend, LucideCamera, LucideMic, LucideImage, LucideSmile } from 'lucide-react-native';
 import { supabase } from '~/lib/data';
