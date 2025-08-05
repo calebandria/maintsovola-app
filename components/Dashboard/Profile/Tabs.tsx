@@ -174,7 +174,6 @@ const tabsSuperviseur = [
       {/* Contenu défilable */}
       <ScrollView contentContainerStyle={{ padding: 12 }} showsVerticalScrollIndicator={false}>
         <ActiveComponent id={id} />
-        <ActiveComponent id={id} />
       </ScrollView>
     </View>
   );

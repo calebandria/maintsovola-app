@@ -119,10 +119,13 @@ const PaymentTrackingSection: React.FC<PaymentTrackingSectionProps> = ({
   );
 };
 
-const USER_ID = '28ff57b7-fb92-4593-b239-5c56b0f44560';
 
-const Paiement = () => {
-  const { metrics, loading } = usePaymentData(USER_ID);
+const Paiement = ({
+  id
+}: {
+  id: string;
+}) => {
+  const { metrics, loading } = usePaymentData(id);
 
   if (loading) {
     return (

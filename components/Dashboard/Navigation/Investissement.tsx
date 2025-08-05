@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, FlatList } from 'react-native';
-import { useAuth } from '~/contexts/AuthContext';
 import { useInvestments, InvestedProject } from '../../../hooks/useInvestments';
 
 // Imports individuels pour chaque composant
@@ -8,16 +7,16 @@ import { InvestmentSummaryCard } from '~/components/InvestmentSummaryCard';
 import { ProjectCard } from '../../../components/ProjectCard';
 import { ProjectDetailsModal } from '~/components/ProjectDetailsModal';
 
-export default function InvestmentsScreen() {
-  const { user } = useAuth();
-  // Utilisation du hook optimisé useInvestments
+export default function InvestmentsScreen({
+  id
+}: {  id: string;}) {
   const {
     investedProjects,
     investmentSummary,
     loading,
     error,
     refresh,
-  } = useInvestments(user?.id || '');
+  } = useInvestments(id);
 
   const [selectedProject, setSelectedProject] = useState<InvestedProject | null>(null);
   const [modalVisible, setModalVisible] = useState(false);

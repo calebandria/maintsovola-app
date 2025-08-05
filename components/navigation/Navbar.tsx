@@ -270,7 +270,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
                 className="flex-row items-center px-4 py-3 active:bg-gray-50"
                 onPress={() => {
                   setShowProfile(false)
-                  console.log("Navigation vers paramètres")
+                  router.push('/settings');
                 }}
                 activeOpacity={0.8}
               >
@@ -317,7 +317,6 @@ const Navbar: React.FC<NavbarProps> = ({ activeNavIcon = "home", onNavChange }) 
                 className="flex-row items-center px-4 py-3 active:bg-red-50"
                 onPress={() => {
                   setShowProfile(false)
-                  console.log("Déconnexion")
                 }}
                 activeOpacity={0.8}
               >

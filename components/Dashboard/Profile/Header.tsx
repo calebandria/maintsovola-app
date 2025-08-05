@@ -1,15 +1,15 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
-
+import { useRouter } from 'expo-router';
 interface UserProfile {
   photo_profil?: string;
   nom: string;
   prenoms?: string;
   nom_role?: string;
-  bio?: string;
+  bio?: string;                                                                                                                                             
   adresse?: string;
   telephone?: string;
-  email: string;
+  email?: string;
 }
 
 export default function ProfileHeader({
@@ -29,6 +29,7 @@ export default function ProfileHeader({
   projectsCount: number;
   onFollowToggle: () => void;
 }) {
+  const router = useRouter();
   return (
     <View className="p-4">
       <View className="flex-col items-center">
@@ -86,7 +87,7 @@ export default function ProfileHeader({
             <View className="flex-row items-center">
               <Feather name="mail" size={14} color="#125b47" />
               <Text className="text-black-500 text-sm ml-1">
-                {profile.email}
+                {profile.email || 'Non renseigné'}
               </Text>
             </View>
           </View>
@@ -111,7 +112,11 @@ export default function ProfileHeader({
       {/* Actions */}
       <View className="flex-row gap-3 mt-4">
         {isCurrentUser ? (
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2 border rounded-lg" style={{ borderColor: '#125b47' }}>
+          <TouchableOpacity className="flex-1 flex-row items-center justify-center py-2 border rounded-lg" style={{ borderColor: '#125b47' }} 
+            onPress={() => {
+              router.push('/settings');
+            }}
+          >
             <Feather name="edit" size={16} color="#125b47" />
             <Text className="font-bold ml-2" style={{ color: '#125b47' }}>Modifier</Text>
           </TouchableOpacity>
