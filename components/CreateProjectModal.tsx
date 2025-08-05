@@ -14,11 +14,11 @@ import {
 import { Picker } from '@react-native-picker/picker';
 
 import { launchImageLibraryAsync } from 'expo-image-picker';
-import { supabase } from '@/lib/supabase';
-import { CultureData } from '@/types/cultureData';
-import { ProjectData } from '@/type/projectInterface';
-import { TerrainData } from '@/types/terrainData';
-import { Checkbox } from '@/components/ui/Checkbox';
+import { supabase } from '~/lib/supabase';
+import { CultureData } from '~/types/cultureData';
+import { ProjectData } from '~/type/projectInterface';
+import { TerrainData } from '~/types/terrainData';
+import { Checkbox } from '~/components/ui/Checkbox';
 import { MapPlus } from 'lucide-react-native';
 import { router } from 'expo-router';
 // Remplacer uuid par une fonction simple

@@ -1,6 +1,6 @@
 // app/(auth)/reset-password.tsx
 import { Ionicons } from '@expo/vector-icons';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '~/lib/data';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -108,10 +108,6 @@ export default function ResetPasswordScreen() {
     setErrors({});
 
     try {
-      const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-      const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
       const { error } = await supabase.auth.updateUser({
         password: formData.password,
       });
