@@ -2,26 +2,63 @@ import { useEffect, useState } from 'react';
 import { supabase } from "~/lib/data";
 import { Database } from '~/types/database.types';
 
+export interface UserProfile {
+  photo_profil?: string;
+  photo_couverture?: string;
+  nom: string;
+  prenoms?: string;
+  nom_role?: string;
+  bio?: string;
+  adresse?: string;
+  telephone?: string;
+  email?: string;
+  id_utilisateur?: string;
+}
 
-type UserProfile = Database['public']['Tables']['utilisateur']['Row']
 export const useProfile = (userId: string) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data, error } = await supabase
-        .from('utilisateur') // Nom de ta table
-        .select('*')
-        .eq('id_utilisateur', userId)
-        .single();
-
-      if (error) {
-        console.error('Erreur de récupération :', error.message);
-      } else {
-        setProfile(data);
+      try {
+        // Récupérer les données utilisateur
+        const { data: userData, error: userError } = await supabase
+          .from('utilisateur')
+          .select('*')
+          .eq('id_utilisateur', userId)
+          .single();
+        
+        // Récupérer le premier numéro de téléphone (ou vous pouvez récupérer tous les numéros)
+        const { data: phoneData, error: phoneError } = await supabase
+          .from('telephone')
+          .select('numero')
+          .eq('id_utilisateur', userId)
+          .limit(1);
+          
+        if (userError) {
+          console.error('Erreur de récupération du profil utilisateur:', userError.message);
+          setProfile(null);
+        } else {
+          // Construire le profil en combinant les données utilisateur et téléphone
+          const profileData: UserProfile = {
+            ...userData,
+            telephone: phoneData && phoneData.length > 0 ? phoneData[0].numero : undefined
+          };
+          
+          setProfile(profileData);
+        }
+        
+        if (phoneError) {
+          console.warn('Erreur de récupération du téléphone (non bloquant):', phoneError.message);
+        }
+        
+      } catch (error) {
+        console.error('Erreur générale lors de la récupération du profil:', error);
+        setProfile(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchProfile();
