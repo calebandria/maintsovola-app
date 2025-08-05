@@ -1,7 +1,7 @@
 import { Slot, usePathname } from 'expo-router';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FacebookHeader from '~/components/navigation/Header';
+import FacebookHeader from '../../components/navigation/Header';
 import { getUsername } from '~/services/conversation-message-service';
 
 export default function TabsLayout() {

@@ -3,10 +3,13 @@ import {
   View,
   Text,
   Modal,
+  TouchableOpacity,
   StyleSheet,
+  Platform,
   ScrollView,
   Image,
-  ActivityIndicator,
+  FlatList,
+  Dimensions,
 } from 'react-native';
 import { Polygon, UrlTile } from 'react-native-maps';
 import MapView from 'react-native-maps';
@@ -23,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../../components/ui/alert-dialog';
-import { Pencil, Trash2, Mail, User, MapPin, Calendar, Check, X } from 'lucide-react-native';
+import { Pencil, Trash2, Mail, User, MapPin, Calendar, Check, X } from 'lucide-react';
 import ProjectPhotosGallery from 'components/ProjectPhotosGallery';
 import UserAvatar from 'components/terrain/UserAvatar';
 import { supabase } from 'integrations/supabase/client';

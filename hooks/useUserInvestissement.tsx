@@ -96,7 +96,7 @@
 //   return { investments, pendingPayments, loading, error };
 // };
 import { useState, useEffect } from 'react';
-import { supabase } from '~/lib/data_with_type'; // Make sure this path is correct for your RN project
+import { supabase } from '~/lib/data'; // Make sure this path is correct for your RN project
 
 type NextPaymentDueType = {
   amount: number;

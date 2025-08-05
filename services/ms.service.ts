@@ -1,10 +1,10 @@
 // ms.service.ts
-import { supabase } from '../lib/data'; 
+import { supabase } from '../lib/ms-supabase'; // Assurez-vous que le chemin est correct
 import { User } from "@supabase/supabase-js";
 
 interface Conversations {
-    id_conversation: number;
-    id_utilisateur1: number;
+    id_conversation: string;
+    id_utilisateur1: string;
     id_utilisateur2: string;
     derniere_activite: string;
     created_at: Date;
@@ -25,7 +25,7 @@ interface Message {
 }
 
 // Fonction pour récupérer les conversations
-const getConversation = async (user: User | null) => {
+const getConversation = async (user: User | null): Promise<Conversations[]> => {
     if (!user) {
         console.warn("Utilisateur non connecté");
         return [];
@@ -46,7 +46,7 @@ const getConversation = async (user: User | null) => {
         console.log("DATA MS.SERVICES", JSON.stringify(data));
 
         // Mapper les données
-        const convData = data?.map((conv) => ({
+        const convData: Conversations[] = data?.map((conv) => ({
             id_conversation: conv.id_conversation,
             id_utilisateur1: conv.id_utilisateur1,
             id_utilisateur2: conv.id_utilisateur2,
@@ -65,7 +65,7 @@ const getConversation = async (user: User | null) => {
 };
 
 // Fonction pour récupérer les messages
-const getMessages = async (conversationId: number) => {
+const getMessages = async (conversationId: string): Promise<Message[]> => {
     try {
         const { data, error } = await supabase
             .from('message')
@@ -86,10 +86,10 @@ const getMessages = async (conversationId: number) => {
     }
 };
 
-/* // Fonction pour envoyer un message
+// Fonction pour envoyer un message
 const sendMessage = async (
     selectedConversation: Conversations, 
-    user: { id: number, email: string }, 
+    user: { id: string, email: string }, 
     newMessage: string
 ): Promise<boolean> => {
     try {
@@ -103,8 +103,6 @@ const sendMessage = async (
                     : selectedConversation.id_utilisateur1,
                 contenu: newMessage,
                 date_envoi: new Date().toISOString(),
-                lu:false,
-                pieces_jointes: message.pieces_jointes || null
             });
 
         if (error) {
@@ -125,5 +123,5 @@ const sendMessage = async (
         return false;
     }
 };
- */
-export { getConversation, getMessages, type Conversations, type Message };
+
+export { getConversation, getMessages, sendMessage, type Conversations, type Message };

@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react';
 import { supabase } from "~/lib/data";
-import { Database } from '~/types/database.types';
 
+export interface UserProfile {
+  photo_profil?: string;
+  nom: string;
+  prenoms?: string;
+  nom_role?: string;
+  bio?: string;
+  adresse?: string;
+  telephone?: string;
+  email: string;
+}
 
-type UserProfile = Database['public']['Tables']['utilisateur']['Row']
 export const useProfile = (userId: string) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);

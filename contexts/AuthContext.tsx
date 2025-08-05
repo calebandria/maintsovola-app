@@ -2,7 +2,6 @@
 'use client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
-import { supabase as client} from '~/lib/data';
 import { router } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
@@ -200,7 +199,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
           throw new Error("Variables d'environnement Supabase manquantes");
         }
-        
+
+        const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            storage: AsyncStorage,
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: false,
+          },
+        });
+
         setSupabase(client);
         console.log('✅ Supabase client initialisé');
       } catch (error) {

@@ -2,9 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Dimensions } from 'react-native';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { ProjectCategoryData, ProjectCultureCount, ProjectStatusData, ProjectsSummaryProps } from '~/types/projet'
-import { StatCard } from './InvestmentSummaryCard';
-import { BanknoteArrowUp, HandCoins, LandPlot, Target } from 'lucide-react-native';
+import { ProjectCategoryData,ProjectCultureCount, ProjectStatusData, ProjectsSummaryProps } from '~/types/projet'  
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('fr-MG', {
     style: 'currency',
@@ -144,37 +142,48 @@ const ProjectsSummary: React.FC<ProjectsSummaryProps> = ({
   );
 
   return (
-    <View className="mb-6 bg-white rounded-lg p-4 shadow-sm">
-      <Text className="text-xl font-bold mb-4 text-gray-800">Résumé des projets</Text>
+    <ScrollView className="flex-1 p-4 bg-gray-100">
+      <Text className="text-lg font-semibold mb-4 text-gray-800">Résumé des projets</Text>
 
-      <View className="flex-col gap-2 mb-4">
-        <StatCard
-          icon={<Target size={18} color="#facc15" />}
-          label="Total des projets"
-          value={`${totalProjects}`}
-        />
-
-        <StatCard
-          icon={<LandPlot size={18} color="#16a34a" />}
-          label="Surface totale"
-          value={`${totalArea.toFixed(2)} ha`}
-          valueColor="text-green-600"
-        />
-
-        <StatCard
-          icon={<HandCoins size={18} color="#2563eb" />}
-          label="Financements reçus"
-          value={`${formatCurrency(totalFunding)}`}
-          valueColor="text-blue-600"
-        />
-        <View className="border border-gray-300 p-3 rounded-lg">
-          <View className="flex-row items-center gap-2 mb-2">
-            <BanknoteArrowUp size={18} color="#b81c33" />
-            <Text className="text-gray-500">Bénéfice propriétaire</Text>
+      <View className="flex-1 mb-4">
+        <View className="px-2 mb-4 bg-white rounded-lg shadow-md p-4">
+          <View className="pb-2">
+            <Text className="text-sm text-gray-500">Total des projets</Text>
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons name="layers-outline" size={20} color="gray" className="mr-2" />
+              <Text className="text-lg font-semibold text-gray-800">{totalProjects}</Text>
+            </View>
           </View>
-          <Text className={`text-xl font-bold text-red-800`}>
-            {formatCurrency(totalFunding)}
-          </Text>
+        </View>
+
+        <View className="px-2 mb-4 bg-white rounded-lg shadow-md p-4">
+          <View className="pb-2">
+            <Text className="text-sm text-gray-500">Surface totale</Text>
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons name="map-outline" size={20} color="gray" className="mr-2" />
+              <Text className="text-lg font-semibold text-gray-800">{totalArea.toFixed(2)} ha</Text>
+            </View>
+          </View>
+        </View>
+
+        <View className="px-2 mb-4 bg-white rounded-lg shadow-md p-4">
+          <View className="pb-2">
+            <Text className="text-sm text-gray-500">Financements reçus</Text>
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons name="credit-card-outline" size={20} color="gray" className="mr-2" />
+              <Text className="text-lg font-semibold text-gray-800">{formatCurrency(totalFunding)}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View className="px-2 mb-4 bg-white rounded-lg shadow-md p-4">
+          <View className="pb-2">
+            <Text className="text-sm text-gray-500">Bénéfice propriétaire</Text>
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons name="chart-pie" size={20} color="gray" className="mr-2" />
+              <Text className="text-base font-semibold text-gray-800">{formatCurrency(ownerProfit)}</Text>
+            </View>
+          </View>
           <Text className="text-xs text-gray-500">
             40% du bénéfice total ({formatCurrency(totalProfit)})
           </Text>
@@ -220,7 +229,7 @@ const ProjectsSummary: React.FC<ProjectsSummaryProps> = ({
                   },
                   barPercentage: 0.8,
                 }}
-                verticalLabelRotation={0} yAxisSuffix={''} />
+                verticalLabelRotation={0} yAxisSuffix={''}              />
             </View>
           </View>
         </View>
@@ -229,7 +238,7 @@ const ProjectsSummary: React.FC<ProjectsSummaryProps> = ({
       {renderCategorySection("En financement", projectsByStatus.enFinancement, "#94a3b8")}
       {renderCategorySection("En cours", projectsByStatus.enCours, "#3b82f6")}
       {renderCategorySection("Terminés", projectsByStatus.termine, "#10b981")}
-    </View>
+    </ScrollView>
   );
 };
 
